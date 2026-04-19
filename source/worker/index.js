@@ -1,3 +1,18 @@
+const SECURITY_HEADERS = {
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Content-Security-Policy": "default-src 'self'; img-src 'self' data:; style-src 'self'",
+};
+
+function withSecurityHeaders(response) {
+  const patched = new Response(response.body, response);
+  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+    patched.headers.set(key, value);
+  }
+  return patched;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -15,12 +30,12 @@ export default {
     if (response.status === 404) {
       const notFoundResponse = await env.ASSETS.fetch(new Request(new URL("/404.html", request.url)));
       if (notFoundResponse.ok) {
-        return new Response(notFoundResponse.body, {
+        return withSecurityHeaders(new Response(notFoundResponse.body, {
           status: 404,
           headers: notFoundResponse.headers,
-        });
+        }));
       }
     }
-    return response;
+    return withSecurityHeaders(response);
   },
 };
