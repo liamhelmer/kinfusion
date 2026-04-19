@@ -1,0 +1,25 @@
+Kin-Fusion Campout
+A fusion dance unconference at Rhizome Springs on Saltspring island in beautiful BC, Canada (https://www.rhizomesprings.com/)
+A community based, not for profit event. 3 days of dance, DJs, live music, unconference and cocreation
+The event is capped at 90 people
+We'll have a form for signup. The form data should land in a google sheet
+There'll also be a form for the unconference, so that people can sign up to do workshops
+There'll also be a form for community DJs to sign up to do a set
+
+Sliding scale cost: $300 base price, $350 mid-tier price, $400 High tier. Higher tiers will help support a better event as well as scholarships. partial scholarships available to those in need.
+
+Dates: Arrive Thursday September 10th or Friday September 11th 2026. Event starts September 11th 2026. Ends Sunday Night, but participants will be allowed to stay til Monday morning if they wish
+
+Food will be provided by the event
+
+All participants will all be called on to help: everyone will be asked to volunteer in small ways to make the event run smoothly. This is a community event, and we're all a part of creating it
+
+The website should be simple, run on cloudflare's free tier, and have minimimal dependencies. The visuals are in @assets/
+The domain name is kinfusion.dance
+
+It should be heavy on photos, simple to navigate, and feel easy to the non-technical users signing up.
+
+payments will be done by interac etransfer or via wyse, to the rhizome springs address
+
+Bring your kids: the event is intended to be family friendly: we will be working to provide a dedicated quiet space and child friendly unconference activities. Kids 12 and under are free, older children pay the normal price for the event
+
