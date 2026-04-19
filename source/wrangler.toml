@@ -1,0 +1,21 @@
+name = "kinfusion-website"
+main = "worker/index.js"
+compatibility_date = "2025-01-01"
+
+[assets]
+directory = "./_site"
+binding = "ASSETS"
+
+[[kv_namespaces]]
+binding = "RATE_KV"
+id = "placeholder_replace_with_real_id"
+preview_id = "placeholder_replace_with_real_preview_id"
+
+[build]
+command = "npm run build"
+
+[env.preview]
+name = "kinfusion-website-preview"
+
+[env.production]
+name = "kinfusion-website"
