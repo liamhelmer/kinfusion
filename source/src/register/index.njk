@@ -105,20 +105,31 @@ description: "Apply to attend Kin-Fusion Campout 2026 — a fusion dance unconfe
         </select>
       </div>
 
-      <label class="checkbox-label">
-        <input type="checkbox" name="stayMonday" id="stayMonday">
-        <span>I plan to stay until Monday, September 14</span>
-      </label>
-
       <div class="field">
-        <label for="kidsUnder13">Children under 13 attending with you</label>
-        <input type="number" id="kidsUnder13" name="kidsUnder13" min="0" max="5" value="0"
-               aria-describedby="kids-help">
+        <label for="leavingDay">Departure day <span aria-hidden="true">*</span></label>
+        <select id="leavingDay" name="leavingDay" required aria-required="true">
+          <option value="">Select your departure day&hellip;</option>
+          <option value="sunday">Sunday, September 13</option>
+          <option value="monday">Monday, September 14</option>
+        </select>
       </div>
-      <div class="field">
-        <label for="kids13AndOver">Youth 13 and older attending with you</label>
-        <input type="number" id="kids13AndOver" name="kids13AndOver" min="0" max="5" value="0">
-        <p id="kids-help" class="field-help">Enter 0 if none</p>
+
+      <div class="field" id="childrenField">
+        <p><strong>Children under 13 attending with you</strong></p>
+        <p class="field-help">Kids 12 and under attend free. Add each child's name and age below.</p>
+        <div id="children-list" aria-label="Children attending"></div>
+        <button type="button" id="add-child-btn" class="btn btn-secondary btn-sm">+ Add a child</button>
+      </div>
+
+      <div class="field" id="parentPhoneField" hidden>
+        <label for="parentPhone">Emergency contact number(s) for children <span aria-hidden="true">*</span></label>
+        <input type="tel" id="parentPhone" name="parentPhone" maxlength="50"
+               autocomplete="tel" aria-describedby="parentPhone-help">
+        <p id="parentPhone-help" class="field-help">Phone number(s) organizers can reach in an emergency.</p>
+      </div>
+
+      <div class="notice notice-info">
+        <p><strong>Youth 13 and older</strong> must register individually using their own email address.</p>
       </div>
     </fieldset>
 

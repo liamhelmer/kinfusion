@@ -73,18 +73,34 @@ description: "Sign up to DJ at Kin-Fusion Campout 2026 — share your music with
       </div>
 
       <div class="field">
-        <label for="links">Links to your music (optional)</label>
+        <label for="links">Links to sample sets (optional)</label>
         <textarea id="links" name="links" maxlength="500" rows="3"
                   aria-describedby="links-help"
-                  placeholder="SoundCloud, Mixcloud, YouTube, etc."></textarea>
+                  placeholder="SoundCloud, Mixcloud, YouTube, etc. — sets you've played that give us a feel for your style"></textarea>
         <p id="links-help" class="field-help">Max 500 characters</p>
+      </div>
+
+      <div class="field">
+        <label for="preferredTime">When would you like to perform? (optional)</label>
+        <textarea id="preferredTime" name="preferredTime" maxlength="200" rows="2"
+                  aria-describedby="time-help"
+                  placeholder="e.g. Friday evening, Saturday late night, open to whatever works"></textarea>
+        <p id="time-help" class="field-help">Preferred day/time or any constraints. Max 200 characters.</p>
+      </div>
+
+      <div class="field">
+        <label for="gearNeeded">What do you need to perform? (optional)</label>
+        <textarea id="gearNeeded" name="gearNeeded" maxlength="500" rows="3"
+                  aria-describedby="gear-help"
+                  placeholder="e.g. CDJs, mixer, PA system, just a 3.5mm aux input"></textarea>
+        <p id="gear-help" class="field-help">List any equipment or setup requirements. Max 500 characters.</p>
       </div>
 
       <div class="field">
         <label for="notes">Anything else you'd like us to know? (optional)</label>
         <textarea id="notes" name="notes" maxlength="500" rows="3"
                   aria-describedby="notes-help"></textarea>
-        <p id="notes-help" class="field-help">Equipment, availability, questions, etc. Max 500 characters.</p>
+        <p id="notes-help" class="field-help">Max 500 characters.</p>
       </div>
     </fieldset>
 

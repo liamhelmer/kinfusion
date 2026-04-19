@@ -48,7 +48,7 @@ function handleUnconference(payload) {
     'Kin-Fusion Campout Team',
   ].join('\n');
 
-  GmailApp.sendEmail(payload.email, subject, plainBody, {
+  MailApp.sendEmail(payload.email, subject, plainBody, {
     from: fromEmail,
     replyTo: 'hello@kinfusion.dance',
     htmlBody: buildUnconferenceEmailHtml(payload.proposerName, payload.workshopTitle, refCode),

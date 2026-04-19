@@ -2,6 +2,7 @@
 
 const VALID_TIERS = new Set(['300', '350', '400']);
 const VALID_ARRIVAL_DAYS = new Set(['thursday', 'friday', 'saturday']);
+const VALID_LEAVING_DAYS = new Set(['sunday', 'monday']);
 const VALID_DURATIONS = new Set(['30', '60', '90']);
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -29,24 +30,40 @@ export function validateRegistration(body) {
     VALID_TIERS.has(String(body.tier)) ? null : { valid: false, field: 'tier', code: 'VALIDATION' },
     checkRequired(body.arrivalDay, 'arrivalDay'),
     VALID_ARRIVAL_DAYS.has(String(body.arrivalDay)) ? null : { valid: false, field: 'arrivalDay', code: 'VALIDATION' },
+    checkRequired(body.leavingDay, 'leavingDay'),
+    VALID_LEAVING_DAYS.has(String(body.leavingDay)) ? null : { valid: false, field: 'leavingDay', code: 'VALIDATION' },
     body.codeOfConductAccepted === true ? null : { valid: false, field: 'codeOfConductAccepted', code: 'VALIDATION' },
     checkLength(body.pronouns, 100, 'pronouns'),
     checkLength(body.scholarshipNote, 500, 'scholarshipNote'),
     checkLength(body.dietaryNotes, 500, 'dietaryNotes'),
     checkLength(body.accessibilityNotes, 500, 'accessibilityNotes'),
     checkLength(body.howDidYouHear, 200, 'howDidYouHear'),
+    checkLength(body.parentPhone, 50, 'parentPhone'),
   ];
   for (const result of checks) {
     if (result) return result;
   }
-  const kidsUnder13 = parseInt(body.kidsUnder13 || 0, 10);
-  const kids13AndOver = parseInt(body.kids13AndOver || 0, 10);
-  if (isNaN(kidsUnder13) || kidsUnder13 < 0 || kidsUnder13 > 5) {
-    return { valid: false, field: 'kidsUnder13', code: 'VALIDATION' };
+
+  // Children validation
+  const children = body.children;
+  if (children !== undefined) {
+    if (!Array.isArray(children) || children.length > 10) {
+      return { valid: false, field: 'children', code: 'VALIDATION' };
+    }
+    for (const child of children) {
+      if (!child || typeof child.name !== 'string' || child.name.length === 0 || child.name.length > 100) {
+        return { valid: false, field: 'children', code: 'VALIDATION' };
+      }
+      if (typeof child.age !== 'number' || child.age < 0 || child.age > 12) {
+        return { valid: false, field: 'children', code: 'VALIDATION' };
+      }
+    }
+    if (children.length > 0) {
+      const phoneCheck = checkRequired(body.parentPhone, 'parentPhone');
+      if (phoneCheck) return phoneCheck;
+    }
   }
-  if (isNaN(kids13AndOver) || kids13AndOver < 0 || kids13AndOver > 5) {
-    return { valid: false, field: 'kids13AndOver', code: 'VALIDATION' };
-  }
+
   return { valid: true };
 }
 
@@ -80,6 +97,8 @@ export function validateDJ(body) {
     checkRequired(body.setStyle, 'setStyle'),
     checkLength(body.setStyle, 200, 'setStyle'),
     checkRequired(body.setLengthMin, 'setLengthMin'),
+    checkLength(body.preferredTime, 200, 'preferredTime'),
+    checkLength(body.gearNeeded, 500, 'gearNeeded'),
     checkLength(body.notes, 500, 'notes'),
     checkLength(body.links, 500, 'links'),
   ];

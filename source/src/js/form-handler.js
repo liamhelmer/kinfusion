@@ -124,6 +124,11 @@ export function initForm(formEl, config) {
     body.formToken = formToken;
     body['cf-turnstile-response'] = turnstileToken;
 
+    // Allow form-specific body transformation (e.g. collect children into a structured array)
+    if (config.transformBody) {
+      Object.assign(body, config.transformBody(formEl, body));
+    }
+
     try {
       const resp = await fetch(`/api/${config.formName}`, {
         method: 'POST',

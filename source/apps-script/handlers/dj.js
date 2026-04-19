@@ -28,8 +28,10 @@ function handleDJSignup(payload) {
     payload.email || '',
     payload.setStyle || '',
     payload.setLengthMin || '',
+    payload.preferredTime || '',
     payload.gearNeeded || '',
     payload.links || '',
+    payload.notes || '',
   ]);
 
   var subject = 'Kin-Fusion Campout \u2014 DJ signup received (' + refCode + ')';
@@ -47,7 +49,7 @@ function handleDJSignup(payload) {
     'Kin-Fusion Campout Team',
   ].join('\n');
 
-  GmailApp.sendEmail(payload.email, subject, plainBody, {
+  MailApp.sendEmail(payload.email, subject, plainBody, {
     from: fromEmail,
     replyTo: 'hello@kinfusion.dance',
     htmlBody: buildDJEmailHtml(payload.djName, refCode),

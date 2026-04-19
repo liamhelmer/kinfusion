@@ -14,14 +14,14 @@ function generateRefCode() {
 }
 
 function buildRegistrationEmailHtml(name, refCode) {
-  var template = HtmlService.createTemplateFromFile('templates/register-confirmation');
+  var template = HtmlService.createTemplateFromFile('register-confirmation');
   template.name = name || 'there';
   template.refCode = refCode;
   return template.evaluate().getContent();
 }
 
 function buildUnconferenceEmailHtml(name, workshopTitle, refCode) {
-  var template = HtmlService.createTemplateFromFile('templates/unconference-confirmation');
+  var template = HtmlService.createTemplateFromFile('unconference-confirmation');
   template.name = name || 'there';
   template.workshopTitle = workshopTitle || '';
   template.refCode = refCode;
@@ -29,7 +29,7 @@ function buildUnconferenceEmailHtml(name, workshopTitle, refCode) {
 }
 
 function buildDJEmailHtml(name, refCode) {
-  var template = HtmlService.createTemplateFromFile('templates/dj-confirmation');
+  var template = HtmlService.createTemplateFromFile('dj-confirmation');
   template.name = name || 'there';
   template.refCode = refCode;
   return template.evaluate().getContent();

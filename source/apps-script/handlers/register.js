@@ -23,6 +23,8 @@ function handleRegister(payload) {
     return { ok: false, code: 'SHEET_NOT_FOUND' };
   }
 
+  var children = Array.isArray(payload.children) ? payload.children : [];
+
   // ADR R7.2 column order (20 columns)
   sheet.appendRow([
     timestamp,
@@ -34,9 +36,9 @@ function handleRegister(payload) {
     payload.scholarshipRequest === true || payload.scholarshipRequest === 'true',
     payload.scholarshipNote || '',
     payload.arrivalDay || '',
-    payload.stayMonday === true || payload.stayMonday === 'true',
-    parseInt(payload.kidsUnder13) || 0,
-    parseInt(payload.kids13AndOver) || 0,
+    payload.leavingDay || '',
+    children.length,
+    payload.parentPhone || '',
     payload.dietaryNotes || '',
     payload.accessibilityNotes || '',
     payload.howDidYouHear || '',
@@ -46,6 +48,26 @@ function handleRegister(payload) {
     'unpaid',
     ''
   ]);
+
+  // Write each child to the Children tab
+  if (children.length > 0) {
+    var childSheet = ss.getSheetByName('Children');
+    if (!childSheet) {
+      childSheet = ss.insertSheet('Children');
+      childSheet.appendRow(['Timestamp', 'ParentRefCode', 'ParentName', 'ParentEmail', 'ParentPhone', 'ChildName', 'ChildAge']);
+    }
+    for (var i = 0; i < children.length; i++) {
+      childSheet.appendRow([
+        timestamp,
+        refCode,
+        payload.fullName || '',
+        payload.email || '',
+        payload.parentPhone || '',
+        children[i].name || '',
+        children[i].age !== undefined ? children[i].age : ''
+      ]);
+    }
+  }
 
   // Confirmation email (ADR R6.4)
   var subject = 'Kin-Fusion Campout \u2014 application received (' + refCode + ')';
@@ -67,7 +89,7 @@ function handleRegister(payload) {
 
   var htmlBody = buildRegistrationEmailHtml(payload.fullName, refCode);
 
-  GmailApp.sendEmail(payload.email, subject, plainBody, {
+  MailApp.sendEmail(payload.email, subject, plainBody, {
     from: fromEmail,
     replyTo: 'hello@kinfusion.dance',
     htmlBody: htmlBody,

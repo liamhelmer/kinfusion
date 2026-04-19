@@ -4,7 +4,21 @@ layout: base.njk
 description: "Kin-Fusion Campout — a fusion dance unconference at Rhizome Springs, Saltspring Island BC, September 11-13 2026."
 ---
 <section class="hero" aria-label="Hero">
-  {% image "at the edge of nature.jpg", "The edge of nature at Rhizome Springs — forest meets meadow in the golden hour", { hero: true } %}
+  <div class="hero-slide is-active">
+    {% image "at the edge of nature.jpg", "The edge of nature at Rhizome Springs — forest meets meadow in the golden hour", { hero: true } %}
+  </div>
+  <div class="hero-slide">
+    {% image "dance.jpg", "Dancers at Kin-Fusion Campout", { hero: true } %}
+  </div>
+  <div class="hero-slide">
+    {% image "sunset.jpg", "Sunset over Rhizome Springs, Saltspring Island", { hero: true } %}
+  </div>
+  <div class="hero-slide">
+    {% image "night dome 6.jpg", "The dome lit up at night at Rhizome Springs", { hero: true } %}
+  </div>
+  <div class="hero-slide">
+    {% image "outdoor eating.jpg", "Community gathering over shared meals", { hero: true } %}
+  </div>
   <div class="hero-text">
     <h1>Kin-Fusion Campout</h1>
     <p class="hero-tagline">A fusion dance unconference at Rhizome Springs, Saltspring Island BC<br>September 11–13, 2026</p>
@@ -14,6 +28,7 @@ description: "Kin-Fusion Campout — a fusion dance unconference at Rhizome Spri
     </div>
   </div>
 </section>
+<script src="/js/hero-slideshow.js"></script>
 
 <section class="intro">
   <div class="container">
