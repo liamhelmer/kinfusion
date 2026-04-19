@@ -1,0 +1,8 @@
+/* Kin-Fusion Campout — main stylesheet (placeholder, full styles in T-1.8) */
+:root {
+  --color-primary: #3a5a40;
+  --color-accent: #c77b31;
+  --color-bg: #faf7f2;
+  --color-text: #1a1a1a;
+}
+body { margin: 0; font-family: system-ui, sans-serif; background: var(--color-bg); color: var(--color-text); }

@@ -1,11 +1,13 @@
-import Image from "@11ty/eleventy-img";
+import EleventyImg from "@11ty/eleventy-img";
 import path from "path";
 import fs from "fs";
+
+const { generateHTML } = EleventyImg;
 
 async function imageShortcode(src, alt, options = {}) {
   const imgSrc = path.join("src", "assets", src);
 
-  const metadata = await Image(imgSrc, {
+  const metadata = await EleventyImg(imgSrc, {
     widths: [480, 960, 1440, 1920],
     formats: ["avif", "webp", "jpeg"],
     outputDir: "./_site/img/",
@@ -21,7 +23,7 @@ async function imageShortcode(src, alt, options = {}) {
     ...(isHero ? { fetchpriority: "high" } : {}),
   };
 
-  return Image.generateHTML(metadata, imageAttributes);
+  return generateHTML(metadata, imageAttributes);
 }
 
 export default function (eleventyConfig) {
