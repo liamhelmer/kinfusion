@@ -58,7 +58,7 @@ export function validateUnconference(body) {
     checkRequired(body.description, 'description'),
     checkLength(body.description, 500, 'description'),
     checkRequired(body.duration, 'duration'),
-    checkLength(body.materialsNeeded, 200, 'materialsNeeded'),
+    checkLength(body.notes, 500, 'notes'),
   ];
   for (const result of checks) {
     if (result) return result;
@@ -70,14 +70,13 @@ export function validateDJ(body) {
   const checks = [
     checkRequired(body.djName, 'djName'),
     checkLength(body.djName, 100, 'djName'),
-    checkRequired(body.realName, 'realName'),
     checkLength(body.realName, 100, 'realName'),
     checkRequired(body.email, 'email'),
     EMAIL_REGEX.test(String(body.email || '')) ? null : { valid: false, field: 'email', code: 'VALIDATION' },
     checkRequired(body.setStyle, 'setStyle'),
     checkLength(body.setStyle, 200, 'setStyle'),
     checkRequired(body.setLengthMin, 'setLengthMin'),
-    checkLength(body.gearNeeded, 200, 'gearNeeded'),
+    checkLength(body.notes, 500, 'notes'),
     checkLength(body.links, 500, 'links'),
   ];
   for (const result of checks) {

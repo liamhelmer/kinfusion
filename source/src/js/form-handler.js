@@ -92,6 +92,12 @@ export function initForm(formEl, config) {
   formEl.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (submitting) return;
+
+    if (!formToken) {
+      announceError('Form not ready. Please refresh the page or email hello@kinfusion.dance');
+      return;
+    }
+
     submitting = true;
 
     if (submitBtn) {
@@ -126,9 +132,16 @@ export function initForm(formEl, config) {
       });
       const data = await resp.json();
 
-      if (data.ok) {
-        announceSuccess(data.message || 'Submission received!');
+      if (data.ok && data.refCode) {
         config.onSuccess(data);
+      } else if (data.ok) {
+        // Duplicate dedupe response — show message without replacing the form
+        announceSuccess(data.message || 'Submission received!');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalBtnText;
+        }
+        submitting = false;
       } else {
         handleError(data);
       }
