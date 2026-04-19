@@ -676,6 +676,30 @@ form legend {
   font-size: 0.9rem;
 }
 
+/* Payment summary table (registration confirmation) */
+.payment-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: var(--space-md);
+}
+.payment-table td {
+  padding: var(--space-xs) var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+}
+.payment-table td:last-child {
+  text-align: right;
+  white-space: nowrap;
+}
+.payment-table .subtotal-row td {
+  border-top: 2px solid var(--color-border);
+}
+.payment-table .total-row td {
+  background: var(--color-notice);
+  font-size: 1.05em;
+  border-bottom: none;
+}
+
 /* ============================================================
    Footer
    ============================================================ */

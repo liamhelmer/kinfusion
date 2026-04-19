@@ -13,10 +13,33 @@ function generateRefCode() {
   return code;
 }
 
-function buildRegistrationEmailHtml(name, refCode) {
+/**
+ * @param {Object} data
+ * @param {string} data.name
+ * @param {string} data.refCode
+ * @param {number} data.tier
+ * @param {string} data.tierLabel
+ * @param {string} data.accommodation
+ * @param {string} data.accommodationLabel
+ * @param {number} data.nights
+ * @param {number} data.accommodationCost
+ * @param {number} data.subtotal
+ * @param {number} data.gst
+ * @param {number} data.total
+ */
+function buildRegistrationEmailHtml(data) {
   var template = HtmlService.createTemplateFromFile('register-confirmation');
-  template.name = name || 'there';
-  template.refCode = refCode;
+  template.name = data.name || 'there';
+  template.refCode = data.refCode || '';
+  template.tier = data.tier || 0;
+  template.tierLabel = data.tierLabel || '';
+  template.accommodation = data.accommodation || 'camping';
+  template.accommodationLabel = data.accommodationLabel || 'General camping';
+  template.nights = data.nights || 0;
+  template.accommodationCost = data.accommodationCost || 0;
+  template.subtotal = data.subtotal || 0;
+  template.gst = data.gst || 0;
+  template.total = data.total || 0;
   return template.evaluate().getContent();
 }
 
