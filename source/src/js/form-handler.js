@@ -38,22 +38,26 @@ export function initForm(formEl, config) {
     }
   }
 
-  // Turnstile callback — called by Turnstile widget on success
+  // Turnstile callback — called by Turnstile widget on success.
+  // May fire before this module executes (api.js is async; module is deferred),
+  // so we also read the hidden input at submit time as a fallback.
   window.turnstileCallback = function(token) {
     turnstileToken = token;
     clearTimeout(turnstileTimeout);
+    // Re-enable button if the timeout had already fired
+    if (submitBtn && !submitting) submitBtn.disabled = false;
+    const fallback = formEl.querySelector('#turnstile-fallback') || document.getElementById('turnstile-fallback');
+    if (fallback) fallback.setAttribute('hidden', '');
   };
 
-  // 5-second Turnstile load timeout — show mailto fallback
+  // 8-second Turnstile load timeout — show mailto fallback as a hint, but do
+  // NOT disable the button: the hidden input set by Turnstile is still usable.
   const turnstileTimeout = setTimeout(() => {
     if (!turnstileToken) {
       const fallback = formEl.querySelector('#turnstile-fallback') || document.getElementById('turnstile-fallback');
-      if (fallback) {
-        fallback.removeAttribute('hidden');
-      }
-      if (submitBtn) submitBtn.disabled = true;
+      if (fallback) fallback.removeAttribute('hidden');
     }
-  }, 5000);
+  }, 8000);
 
   const ERROR_MESSAGES = {
     TURNSTILE_MISSING: 'Please complete the security challenge.',
@@ -122,7 +126,10 @@ export function initForm(formEl, config) {
     });
 
     body.formToken = formToken;
-    body['cf-turnstile-response'] = turnstileToken;
+    // Prefer the stored callback token; fall back to Turnstile's auto-set hidden input
+    // (handles the race where api.js auto-solves before the module callback is registered)
+    const cfInput = formEl.querySelector('input[name="cf-turnstile-response"]');
+    body['cf-turnstile-response'] = turnstileToken || (cfInput && cfInput.value) || null;
 
     // Allow form-specific body transformation (e.g. collect children into a structured array)
     if (config.transformBody) {

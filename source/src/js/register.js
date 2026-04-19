@@ -172,6 +172,16 @@ function addChild() {
 
 addChildBtn.addEventListener('click', addChild);
 
+const hasChildrenCheckbox = document.getElementById('hasChildrenCheckbox');
+const childrenField = document.getElementById('childrenField');
+hasChildrenCheckbox.addEventListener('change', () => {
+  childrenField.hidden = !hasChildrenCheckbox.checked;
+  if (!hasChildrenCheckbox.checked) {
+    childrenList.querySelectorAll('.child-row').forEach(r => r.remove());
+    updateParentPhoneVisibility();
+  }
+});
+
 initForm(form, {
   formName: 'register',
   transformBody(formEl, body) {

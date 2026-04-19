@@ -63,7 +63,7 @@ function handleRegister(payload) {
     return { ok: false, code: 'SHEET_NOT_FOUND' };
   }
 
-  // ADR R7.2 column order (21 columns)
+  // ADR R7.2 column order (22 columns)
   sheet.appendRow([
     timestamp,
     refCode,
@@ -73,6 +73,7 @@ function handleRegister(payload) {
     pricing.tier,
     payload.scholarshipRequest === true || payload.scholarshipRequest === 'true',
     payload.scholarshipNote || '',
+    payload.worktrade === true || payload.worktrade === 'true',
     payload.arrivalDay || '',
     payload.leavingDay || '',
     pricing.accommodation,

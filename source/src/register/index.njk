@@ -76,20 +76,32 @@ description: "Apply to attend Kin-Fusion Campout 2026 — a fusion dance unconfe
       </label>
     </fieldset>
 
-    <!-- Scholarship -->
-    <fieldset>
-      <legend>Scholarship (optional)</legend>
-      <label class="checkbox-label">
-        <input type="checkbox" name="scholarshipRequest" id="scholarshipRequest">
-        <span>I would like to be considered for a partial scholarship</span>
-      </label>
-      <div class="field" id="scholarshipNoteField">
-        <label for="scholarshipNote">A few words about your situation (optional)</label>
-        <textarea id="scholarshipNote" name="scholarshipNote" maxlength="500" rows="3"
-                  aria-describedby="scholarshipNote-help"></textarea>
-        <p id="scholarshipNote-help" class="field-help">Max 500 characters. Kept confidential.</p>
-      </div>
-    </fieldset>
+    <!-- Scholarship + Worktrade -->
+    <div class="fieldset-pair">
+      <fieldset>
+        <legend>Scholarship (optional)</legend>
+        <p class="field-help">Partial scholarships of up to 50% off the registration fee are available. Scholarships cover registration only — accommodation costs are not included.</p>
+        <label class="checkbox-label">
+          <input type="checkbox" name="scholarshipRequest" id="scholarshipRequest">
+          <span>I would like to be considered for a partial scholarship</span>
+        </label>
+        <div class="field" id="scholarshipNoteField">
+          <label for="scholarshipNote">A few words about your situation (optional)</label>
+          <textarea id="scholarshipNote" name="scholarshipNote" maxlength="500" rows="3"
+                    aria-describedby="scholarshipNote-help"></textarea>
+          <p id="scholarshipNote-help" class="field-help">Max 500 characters. Kept confidential.</p>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Worktrade (optional)</legend>
+        <p class="field-help">A limited number of worktrade spots are available. Worktrade participants help with food service in exchange for a reduction on their registration fee. If you'd like to be considered, check the box below and we'll be in touch with details.</p>
+        <label class="checkbox-label">
+          <input type="checkbox" name="worktrade" id="worktrade">
+          <span>I'd like to be considered for worktrade</span>
+        </label>
+      </fieldset>
+    </div>
 
     <!-- Arrival and logistics -->
     <fieldset>
@@ -114,9 +126,15 @@ description: "Apply to attend Kin-Fusion Campout 2026 — a fusion dance unconfe
         </select>
       </div>
 
-      <div class="field" id="childrenField">
-        <p><strong>Children under 13 attending with you</strong></p>
-        <p class="field-help">Kids 12 and under attend free. Add each child's name and age below.</p>
+      <div class="field">
+        <label class="checkbox-label">
+          <input type="checkbox" id="hasChildrenCheckbox" name="hasChildren">
+          <span>I have children under 13 attending with me <span class="field-help">(kids 12 and under are free)</span></span>
+        </label>
+      </div>
+
+      <div class="field" id="childrenField" hidden>
+        <p class="field-help">Add each child's name and age below.</p>
         <div id="children-list" aria-label="Children attending"></div>
         <button type="button" id="add-child-btn" class="btn btn-secondary btn-sm">+ Add a child</button>
       </div>
