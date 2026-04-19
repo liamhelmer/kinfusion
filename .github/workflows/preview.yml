@@ -1,7 +1,10 @@
-name: Preview Deploy
+name: Preview Deploy and Quality Gates
 
 on:
   push:
+    branches-ignore:
+      - main
+  pull_request:
     branches-ignore:
       - main
 
@@ -27,8 +30,11 @@ jobs:
       - name: Build site
         run: npm run build
 
+      - name: Run unit tests
+        run: npm test
+
       - name: Deploy to Cloudflare Workers (preview)
-        if: ${{ env.CF_API_TOKEN != '' }}
+        if: ${{ env.CF_API_TOKEN != '' && github.event_name == 'push' }}
         run: npx wrangler deploy --env preview
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
@@ -36,12 +42,11 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
 
-      - name: Skip deploy (secrets not configured)
-        if: ${{ env.CF_API_TOKEN == '' }}
+      - name: Skip deploy (secrets not configured or PR event)
+        if: ${{ env.CF_API_TOKEN == '' || github.event_name == 'pull_request' }}
         run: |
-          echo "CF_API_TOKEN not set in GitHub Actions secrets."
-          echo "To enable preview deploys: add CF_API_TOKEN and CF_ACCOUNT_ID as repository secrets."
-          echo "Build completed successfully — only the Cloudflare deploy step was skipped."
+          echo "Preview deploy skipped (PR event or CF secrets not set)."
+          echo "Accessibility and Lighthouse checks will run against the local build."
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
 
@@ -51,28 +56,32 @@ jobs:
         run: |
           npx http-server _site -p 8080 --silent &
           SERVER_PID=$!
-          # Wait for server to be ready (up to 15 seconds)
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          READY=0
           for i in $(seq 1 15); do
-            curl -sf http://localhost:8080/ > /dev/null 2>&1 && break
+            curl -sf http://localhost:8080/ > /dev/null 2>&1 && READY=1 && break
             sleep 1
           done
+          if [ "$READY" -eq 0 ]; then
+            echo "ERROR: local server did not become ready after 15 seconds"
+            exit 1
+          fi
           PAGES="/ /about/ /location/ /schedule/ /register/ /unconference/ /dj/ /faq/"
           FAILED=0
           for PAGE in $PAGES; do
             echo "Checking $PAGE..."
             npx axe "http://localhost:8080${PAGE}" --exit || FAILED=1
           done
-          kill $SERVER_PID 2>/dev/null || true
           exit $FAILED
 
       # T-3.4: No-payment-data CI check (ADR R12.1 / R12.2)
-      # Greps source for banned payment field names; exits non-zero if any are found.
+      # Greps source for banned payment field names using word boundaries to avoid false positives.
       - name: No-payment-data check (R12)
         run: |
-          BANNED="cardNumber|cvv|bankAccount|routingNumber|creditCard|debitCard|cardCvv|accountNumber"
+          BANNED='\bcardNumber\b|\bcvv\b|\bbankAccount\b|\broutingNumber\b|\bcreditCard\b|\bdebitCard\b|\bcardCvv\b|\baccountNumber\b'
           if grep -rE "$BANNED" \
                --include='*.js' --include='*.njk' --include='*.md' --include='*.html' \
-               src/ worker/ apps-script/ 2>/dev/null; then
+               . 2>/dev/null | grep -v 'node_modules' | grep -v '_site' | grep -v 'runbook.md'; then
             echo "FAIL: banned payment field name found in source tree"
             exit 1
           fi
@@ -83,19 +92,23 @@ jobs:
         run: |
           npx http-server _site -p 8081 --silent &
           SERVER_PID=$!
-          # Wait for server to be ready (up to 15 seconds)
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          READY=0
           for i in $(seq 1 15); do
-            curl -sf http://localhost:8081/ > /dev/null 2>&1 && break
+            curl -sf http://localhost:8081/ > /dev/null 2>&1 && READY=1 && break
             sleep 1
           done
+          if [ "$READY" -eq 0 ]; then
+            echo "ERROR: local server did not become ready after 15 seconds"
+            exit 1
+          fi
           npx lhci autorun
-          LHCI_EXIT=$?
-          kill $SERVER_PID 2>/dev/null || true
-          exit $LHCI_EXIT
         env:
           LHCI_BUILD_CONTEXT__CURRENT_HASH: ${{ github.sha }}
 
-      # T-3.3: Playwright E2E (ADR R10.1) — runs only when a staging URL is available
+      # T-3.3: Playwright E2E (ADR R10.1) — runs only when a staging URL is available.
+      # R10.1 requires golden-path E2E before every production deploy.
+      # Production workflow hard-requires PLAYWRIGHT_BASE_URL — see production.yml.
       - name: Playwright E2E tests
         if: ${{ env.PLAYWRIGHT_BASE_URL != '' }}
         run: npx playwright test

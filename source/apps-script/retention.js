@@ -7,7 +7,9 @@
  *  3. Sends notification email to ORGANIZER_EMAIL Script Property.
  *
  * Before DELETE_AFTER_DATE: logs a no-op message and returns.
- * Idempotent: checks for an existing archive entry before executing.
+ *
+ * Idempotency: uses Script Property RETENTION_COMPLETED_AT written only after
+ * both archive and deletion succeed. Tab-existence check is a fallback only.
  *
  * Trigger: daily — install via installRetentionTrigger() once.
  */
@@ -17,6 +19,7 @@ var DELETE_AFTER_DATE = new Date('2026-12-12T00:00:00Z');
 
 var OPERATIONAL_TABS = ['Registrations', 'UnconferenceProposals', 'DJSignups'];
 var ARCHIVE_TAB_NAME = 'KinFusion-2026-Archive';
+var RETENTION_COMPLETED_PROP = 'RETENTION_COMPLETED_AT';
 
 function runRetentionCheck() {
   return _runRetentionCheck(new Date(), DELETE_AFTER_DATE);
@@ -34,6 +37,14 @@ function _runRetentionCheck(now, deleteAfter) {
   }
 
   var props = PropertiesService.getScriptProperties();
+
+  // Primary idempotency check: script property written only after successful completion
+  var completedAt = props.getProperty(RETENTION_COMPLETED_PROP);
+  if (completedAt) {
+    Logger.log('retention: already completed at ' + completedAt + ' — idempotent skip');
+    return { action: 'noop', reason: 'already_completed' };
+  }
+
   var sheetId = props.getProperty('SHEET_ID');
   var organizerEmail = props.getProperty('ORGANIZER_EMAIL');
 
@@ -44,35 +55,25 @@ function _runRetentionCheck(now, deleteAfter) {
 
   var ss = SpreadsheetApp.openById(sheetId);
 
-  // Idempotency check: if archive tab already has data rows, skip
-  var archiveSheet = ss.getSheetByName(ARCHIVE_TAB_NAME);
-  if (archiveSheet && archiveSheet.getLastRow() > 1) {
-    Logger.log('retention: archive already exists — idempotent skip');
-    return { action: 'noop', reason: 'already_archived' };
-  }
-
-  // Collect aggregate counts before deletion
+  // Collect aggregate counts BEFORE any deletion
   var counts = {};
+  var opSheets = {};
   for (var i = 0; i < OPERATIONAL_TABS.length; i++) {
     var tabName = OPERATIONAL_TABS[i];
     var sheet = ss.getSheetByName(tabName);
-    if (sheet) {
-      // lastRow - 1 because row 1 is the header
-      counts[tabName] = Math.max(0, sheet.getLastRow() - 1);
-    } else {
-      counts[tabName] = 0;
-    }
+    opSheets[tabName] = sheet;
+    counts[tabName] = sheet ? Math.max(0, sheet.getLastRow() - 1) : 0;
   }
 
   // Create or clear the archive tab
+  var archiveSheet = ss.getSheetByName(ARCHIVE_TAB_NAME);
   if (!archiveSheet) {
     archiveSheet = ss.insertSheet(ARCHIVE_TAB_NAME);
   } else {
     archiveSheet.clearContents();
   }
 
-  // Write aggregate data — no PII
-  var archiveTimestamp = Utilities.formatDate(now, 'UTC', 'yyyy-MM-dd HH:mm:ss z');
+  var archiveTimestamp = Utilities.formatDate(now, 'UTC', 'yyyy-MM-dd HH:mm:ss') + ' UTC';
   archiveSheet.appendRow(['archived_at', 'tab', 'row_count']);
   for (var j = 0; j < OPERATIONAL_TABS.length; j++) {
     var tab = OPERATIONAL_TABS[j];
@@ -82,11 +83,13 @@ function _runRetentionCheck(now, deleteAfter) {
 
   Logger.log('retention: archived counts — ' + JSON.stringify(counts));
 
-  // Delete data rows from operational tabs (keep header row)
+  // Delete data rows using the previously-captured counts to avoid race condition
   for (var k = 0; k < OPERATIONAL_TABS.length; k++) {
-    var opSheet = ss.getSheetByName(OPERATIONAL_TABS[k]);
-    if (opSheet && opSheet.getLastRow() > 1) {
-      opSheet.deleteRows(2, opSheet.getLastRow() - 1);
+    var opTabName = OPERATIONAL_TABS[k];
+    var opSheet = opSheets[opTabName];
+    var rowCount = counts[opTabName];
+    if (opSheet && rowCount > 0) {
+      opSheet.deleteRows(2, rowCount);
     }
   }
 
@@ -94,21 +97,22 @@ function _runRetentionCheck(now, deleteAfter) {
 
   // Send notification email
   if (organizerEmail) {
-    var subject = 'Kin-Fusion Campout 2026 — 90-day retention delete complete';
+    var subject = 'Kin-Fusion Campout 2026 — 90-day retention process complete';
     var body = [
       'This is an automated notification from the Kin-Fusion Campout data retention trigger.',
       '',
-      'Personal data has been archived and deleted from the operational Google Sheet as required by the privacy policy.',
+      'Aggregate counts have been archived and personal data rows have been deleted from',
+      'the operational Google Sheet, as required by the event privacy policy.',
       '',
-      'Archive summary:',
-      '  Registrations: ' + counts['Registrations'] + ' rows archived (aggregate count only — no PII)',
-      '  Unconference Proposals: ' + counts['UnconferenceProposals'] + ' rows archived',
-      '  DJ Signups: ' + counts['DJSignups'] + ' rows archived',
+      'Archive summary (aggregate counts only — no personal information retained):',
+      '  Registrations: ' + counts['Registrations'] + ' rows deleted',
+      '  Unconference Proposals: ' + counts['UnconferenceProposals'] + ' rows deleted',
+      '  DJ Signups: ' + counts['DJSignups'] + ' rows deleted',
       '',
-      'Archived at: ' + archiveTimestamp,
+      'Completed at: ' + archiveTimestamp,
       '',
-      'The "' + ARCHIVE_TAB_NAME + '" tab in the Google Sheet contains only aggregate counts — no personal information.',
-      'Individual data rows have been permanently deleted.',
+      'The "' + ARCHIVE_TAB_NAME + '" tab contains only the row counts above — no personal',
+      'information. Individual data rows have been permanently deleted from operational tabs.',
       '',
       '— Automated trigger',
     ].join('\n');
@@ -118,6 +122,9 @@ function _runRetentionCheck(now, deleteAfter) {
     });
     Logger.log('retention: notification sent to ' + organizerEmail);
   }
+
+  // Mark completion only after archive + delete + notify all succeeded
+  props.setProperty(RETENTION_COMPLETED_PROP, archiveTimestamp);
 
   return {
     action: 'deleted',
@@ -138,10 +145,12 @@ function installRetentionTrigger() {
       return;
     }
   }
+  // Note: Apps Script triggers run in the project timezone, not necessarily UTC.
+  // Configure the project timezone to UTC (File -> Project settings -> Time zone) for predictable scheduling.
   ScriptApp.newTrigger('runRetentionCheck')
     .timeBased()
     .everyDays(1)
     .atHour(2)
     .create();
-  Logger.log('installRetentionTrigger: daily 02:00 UTC trigger installed');
+  Logger.log('installRetentionTrigger: daily hour-2 trigger installed (runs in project timezone)');
 }
