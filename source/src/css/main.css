@@ -486,16 +486,126 @@ main {
 }
 
 /* ============================================================
-   Form page shell (Phase 2 will add full form styles)
+   Forms
    ============================================================ */
-#register-form-container,
-#unconference-form-container,
-#dj-form-container {
-  background: var(--color-notice);
+form fieldset {
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius);
-  padding: var(--space-md);
-  margin-top: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+form legend {
+  font-weight: 600;
+  padding: 0 var(--space-xs);
+  color: var(--color-primary-dark);
+}
+
+.field {
+  margin-bottom: var(--space-sm);
+}
+
+.field label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.field input[type=text],
+.field input[type=email],
+.field input[type=number],
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  background: #fff;
+  color: var(--color-text);
+  box-sizing: border-box;
+}
+
+.field input[aria-invalid=true],
+.field textarea[aria-invalid=true],
+.field select[aria-invalid=true] {
+  border-color: #c00;
+  outline: 2px solid #c00;
+}
+
+.field-help {
+  font-size: 0.85rem;
+  color: var(--color-text-muted, #666);
+  margin: 0.25rem 0 0;
+}
+
+.radio-label,
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: var(--space-xs);
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.radio-label input,
+.checkbox-label input {
+  margin-top: 0.2em;
+  flex-shrink: 0;
+  width: 1.1em;
+  height: 1.1em;
+  cursor: pointer;
+}
+
+.consent-field {
+  margin-bottom: var(--space-sm);
+}
+
+.privacy-notice {
+  background: var(--color-notice);
+  border: 1px solid var(--color-notice-border);
+  border-radius: var(--border-radius);
+  padding: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-md);
+  font-size: 0.9rem;
+}
+
+.privacy-notice h2 {
+  font-size: 1rem;
+  margin-top: 0;
+}
+
+.turnstile-container {
+  margin: var(--space-sm) 0;
+}
+
+.form-status {
+  margin: var(--space-sm) 0;
+  font-weight: 600;
+  color: #c00;
+  min-height: 1.5em;
+}
+
+.form-status:empty {
+  display: none;
+}
+
+/* Honeypot — visually hidden and inaccessible */
+.honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  tab-index: -1;
+}
+
+#scholarshipNoteField {
+  margin-top: var(--space-xs);
 }
 
 /* ============================================================

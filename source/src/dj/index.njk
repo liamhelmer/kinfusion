@@ -13,11 +13,113 @@ description: "Sign up to DJ at Kin-Fusion Campout 2026 — share your music with
 
   <noscript>
     <div class="noscript-notice">
-      <p>The DJ signup form requires JavaScript. If you are unable to use JavaScript, please email us at <a href="mailto:hello@kinfusion.dance">hello@kinfusion.dance</a> to sign up.</p>
+      <p>The DJ signup form requires JavaScript. If you are unable to use JavaScript, please <a href="mailto:{{ site.email }}">email us</a> to sign up.</p>
     </div>
   </noscript>
 
-  <div id="dj-form-container">
-    <p><em>DJ signup form coming soon.</em></p>
-  </div>
+  <form id="dj-form" novalidate aria-label="DJ signup">
+    <!-- Honeypot -->
+    <div class="honeypot" aria-hidden="true">
+      <label for="website-hp-dj">Leave this blank</label>
+      <input type="text" name="website" id="website-hp-dj" tabindex="-1" autocomplete="off">
+    </div>
+
+    <fieldset>
+      <legend>About you</legend>
+
+      <div class="field">
+        <label for="djName">DJ name <span aria-hidden="true">*</span></label>
+        <input type="text" id="djName" name="djName" required aria-required="true"
+               maxlength="100" autocomplete="nickname">
+      </div>
+
+      <div class="field">
+        <label for="realName">Real name (optional)</label>
+        <input type="text" id="realName" name="realName" maxlength="100"
+               autocomplete="name" aria-describedby="realname-help">
+        <p id="realname-help" class="field-help">Used for organizer communication only, not published.</p>
+      </div>
+
+      <div class="field">
+        <label for="email">Email address <span aria-hidden="true">*</span></label>
+        <input type="email" id="email" name="email" required aria-required="true"
+               autocomplete="email" aria-describedby="email-help">
+        <p id="email-help" class="field-help">We'll send your reference code here</p>
+      </div>
+
+      <div class="field">
+        <label for="pronouns">Pronouns (optional)</label>
+        <input type="text" id="pronouns" name="pronouns" maxlength="50"
+               placeholder="e.g. they/them, she/her" autocomplete="off">
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Your music</legend>
+
+      <div class="field">
+        <label for="setStyle">Music style / genres <span aria-hidden="true">*</span></label>
+        <input type="text" id="setStyle" name="setStyle" required aria-required="true"
+               maxlength="200" aria-describedby="style-help"
+               placeholder="e.g. blues, neo-soul, slow jams, ecstatic">
+        <p id="style-help" class="field-help">Max 200 characters</p>
+      </div>
+
+      <div class="field">
+        <label for="setLengthMin">Preferred set length (minutes) <span aria-hidden="true">*</span></label>
+        <input type="number" id="setLengthMin" name="setLengthMin" required aria-required="true"
+               min="30" max="180" step="15" aria-describedby="length-help">
+        <p id="length-help" class="field-help">Typical range is 30–120 minutes</p>
+      </div>
+
+      <div class="field">
+        <label for="links">Links to your music (optional)</label>
+        <textarea id="links" name="links" maxlength="500" rows="3"
+                  aria-describedby="links-help"
+                  placeholder="SoundCloud, Mixcloud, YouTube, etc."></textarea>
+        <p id="links-help" class="field-help">Max 500 characters</p>
+      </div>
+
+      <div class="field">
+        <label for="notes">Anything else you'd like us to know? (optional)</label>
+        <textarea id="notes" name="notes" maxlength="500" rows="3"
+                  aria-describedby="notes-help"></textarea>
+        <p id="notes-help" class="field-help">Equipment, availability, questions, etc. Max 500 characters.</p>
+      </div>
+    </fieldset>
+
+    <!-- Privacy notice -->
+    <div class="privacy-notice" role="note" aria-label="Privacy notice">
+      <h2>Privacy notice</h2>
+      <p>We collect your name, email, and DJ information to coordinate music programming for Kin-Fusion Campout 2026. This information is shared only with the event organizing team and stored in a Google Sheet accessible to organizers. <strong>Personal data will be deleted by December&nbsp;12,&nbsp;2026</strong> (90 days after the event ends). To request early deletion or a copy of your data, email <a href="mailto:{{ site.email }}">{{ site.email }}</a>.</p>
+    </div>
+
+    <!-- Code of Conduct -->
+    <div class="field consent-field">
+      <label class="checkbox-label">
+        <input type="checkbox" name="codeOfConductAccepted" id="codeOfConductAccepted"
+               required aria-required="true" aria-describedby="coc-help">
+        <span>I have read and accept the <a href="/code-of-conduct/" target="_blank" rel="noopener">Kin-Fusion Code of Conduct</a>. <span aria-hidden="true">*</span></span>
+      </label>
+      <p id="coc-help" class="field-help">Required to sign up.</p>
+    </div>
+
+    <!-- Turnstile -->
+    <div class="turnstile-container">
+      <div class="cf-turnstile"
+           data-sitekey="{{ site.turnstileSitekeyStaging if env == 'preview' else site.turnstileSitekey }}"
+           data-callback="turnstileCallback"
+           aria-label="Security challenge"></div>
+      <p id="turnstile-fallback" hidden>
+        Unable to load the security check. Please <a href="mailto:{{ site.email }}">email us</a> to sign up instead.
+      </p>
+    </div>
+
+    <div id="form-status" role="alert" aria-live="polite" class="form-status"></div>
+
+    <button type="submit" id="submit-btn" class="btn btn-primary">Submit signup</button>
+  </form>
 </div>
+
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<script type="module" src="/js/dj.js"></script>

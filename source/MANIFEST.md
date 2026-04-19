@@ -21,7 +21,18 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `imageShortcode` | `source/.eleventy.js` | Async Nunjucks+Liquid shortcode: generates AVIF/WebP/JPEG at 480/960/1440/1920px. Supports `{ hero: true }` for fetchpriority+eager loading. | `@11ty/eleventy-img` | Y |
 | `12 MB image guard` | `source/.eleventy.js` (eleventy.before hook) | Recursively scans `src/assets/` for files > 12 MB; throws to fail the build. | `fs`, `path` | Y |
-| Worker fetch handler | `source/worker/index.js` | Routes `/api/*` to stub handlers (Phase 2); all other paths to ASSETS binding. Returns `/404.html` on 404. | Cloudflare Workers runtime | Y |
+| Worker fetch handler | `source/worker/index.js` | Routes `POST /api/form-token`, `/api/register`, `/api/unconference`, `/api/dj-signup`. Full pipeline: token→Turnstile→validate→middleware→HMAC forward. | headers, formToken, turnstile, validation, middleware, hmac | Y |
+| `addSecurityHeaders` | `source/worker/headers.js` | Clones a Response and adds R5.8 security headers (CSP, HSTS, X-Frame-Options, etc.) | — | Y |
+| `issueToken` / `validateAndConsumeToken` | `source/worker/formToken.js` | Issue and single-use-consume HMAC-signed form tokens stored in RATE_KV with 30-min TTL | Workers KV, Web Crypto | Y |
+| `verifyTurnstile` | `source/worker/turnstile.js` | Calls Cloudflare siteverify to validate Turnstile widget tokens | `TURNSTILE_SECRET` env binding | Y |
+| `applyMiddleware` | `source/worker/middleware.js` | Honeypot (200 fake), rate limit (3/IP/min → 429), dedupe (10-min SHA256 window → 200) | Workers KV, Web Crypto | Y |
+| `validateRegistration` / `validateUnconference` / `validateDJ` | `source/worker/validation.js` | Server-side field validation per R7.3 for all three form endpoints | — | Y |
+| `signAndForward` | `source/worker/hmac.js` | HMAC-SHA256 signs payload (ts:nonce:bodyHash), embeds `_ts/_nonce/_sig` as body fields, POSTs to Apps Script | `APPS_SCRIPT_HMAC_KEY`, `APPS_SCRIPT_URL` | Y |
+| `initForm` | `source/src/js/form-handler.js` | Shared browser form handler: fetches form token, registers Turnstile callback, 5s timeout fallback, submits JSON, maps server error codes to user messages | Browser Fetch API | Y |
+| Apps Script `doPost` gateway | `source/apps-script/gateway.js` | Verifies clock skew, HMAC signature, nonce replay, dispatches to form handlers | Apps Script LockService, CacheService, PropertiesService | Y |
+| `handleRegister` | `source/apps-script/handlers/register.js` | Appends 20-column row to Google Sheet, sends confirmation email with refCode | GmailApp, SpreadsheetApp | Y |
+| `handleUnconference` | `source/apps-script/handlers/unconference.js` | Appends unconference proposal row, sends confirmation email | GmailApp, SpreadsheetApp | Y |
+| `handleDJSignup` | `source/apps-script/handlers/dj.js` | Appends DJ signup row, sends confirmation email | GmailApp, SpreadsheetApp | Y |
 
 ---
 

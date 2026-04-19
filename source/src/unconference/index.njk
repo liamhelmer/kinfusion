@@ -19,11 +19,113 @@ description: "Propose a workshop or session at Kin-Fusion Campout 2026 — a par
 
   <noscript>
     <div class="noscript-notice">
-      <p>The proposal form requires JavaScript. If you are unable to use JavaScript, please email your proposal to <a href="mailto:hello@kinfusion.dance">hello@kinfusion.dance</a>.</p>
+      <p>The proposal form requires JavaScript. If you are unable to use JavaScript, please <a href="mailto:{{ site.email }}">email your proposal</a>.</p>
     </div>
   </noscript>
 
-  <div id="unconference-form-container">
-    <p><em>Proposal form coming soon.</em></p>
-  </div>
+  <form id="unconference-form" novalidate aria-label="Workshop proposal">
+    <!-- Honeypot -->
+    <div class="honeypot" aria-hidden="true">
+      <label for="website-hp-unc">Leave this blank</label>
+      <input type="text" name="website" id="website-hp-unc" tabindex="-1" autocomplete="off">
+    </div>
+
+    <fieldset>
+      <legend>About you</legend>
+
+      <div class="field">
+        <label for="proposerName">Your name <span aria-hidden="true">*</span></label>
+        <input type="text" id="proposerName" name="proposerName" required aria-required="true"
+               maxlength="100" autocomplete="name">
+      </div>
+
+      <div class="field">
+        <label for="email">Email address <span aria-hidden="true">*</span></label>
+        <input type="email" id="email" name="email" required aria-required="true"
+               autocomplete="email" aria-describedby="email-help">
+        <p id="email-help" class="field-help">We'll send your reference code here</p>
+      </div>
+
+      <div class="field">
+        <label for="pronouns">Pronouns (optional)</label>
+        <input type="text" id="pronouns" name="pronouns" maxlength="50"
+               placeholder="e.g. they/them, she/her" autocomplete="off">
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Your proposal</legend>
+
+      <div class="field">
+        <label for="workshopTitle">Session title <span aria-hidden="true">*</span></label>
+        <input type="text" id="workshopTitle" name="workshopTitle" required aria-required="true"
+               maxlength="200" aria-describedby="title-help">
+        <p id="title-help" class="field-help">Max 200 characters</p>
+      </div>
+
+      <div class="field">
+        <label for="description">Description <span aria-hidden="true">*</span></label>
+        <textarea id="description" name="description" required aria-required="true"
+                  maxlength="500" rows="5" aria-describedby="desc-help"></textarea>
+        <p id="desc-help" class="field-help">What will participants do or learn? Max 500 characters.</p>
+      </div>
+
+      <div class="field">
+        <label for="duration">Session length <span aria-hidden="true">*</span></label>
+        <select id="duration" name="duration" required aria-required="true">
+          <option value="">Select a duration&hellip;</option>
+          <option value="30">30 minutes</option>
+          <option value="60">60 minutes</option>
+          <option value="90">90 minutes</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="sessionType">Session type (optional)</label>
+        <input type="text" id="sessionType" name="sessionType" maxlength="100"
+               placeholder="e.g. movement workshop, discussion, jam" autocomplete="off">
+      </div>
+
+      <div class="field">
+        <label for="notes">Anything else we should know? (optional)</label>
+        <textarea id="notes" name="notes" maxlength="500" rows="3"
+                  aria-describedby="notes-help"></textarea>
+        <p id="notes-help" class="field-help">Equipment needs, accessibility considerations, etc. Max 500 characters.</p>
+      </div>
+    </fieldset>
+
+    <!-- Privacy notice -->
+    <div class="privacy-notice" role="note" aria-label="Privacy notice">
+      <h2>Privacy notice</h2>
+      <p>We collect your name, email, and proposal details to coordinate the unconference schedule for Kin-Fusion Campout 2026. This information is shared only with the event organizing team and stored in a Google Sheet accessible to organizers. <strong>Personal data will be deleted by December&nbsp;12,&nbsp;2026</strong> (90 days after the event ends). To request early deletion or a copy of your data, email <a href="mailto:{{ site.email }}">{{ site.email }}</a>.</p>
+    </div>
+
+    <!-- Code of Conduct -->
+    <div class="field consent-field">
+      <label class="checkbox-label">
+        <input type="checkbox" name="codeOfConductAccepted" id="codeOfConductAccepted"
+               required aria-required="true" aria-describedby="coc-help">
+        <span>I have read and accept the <a href="/code-of-conduct/" target="_blank" rel="noopener">Kin-Fusion Code of Conduct</a>. <span aria-hidden="true">*</span></span>
+      </label>
+      <p id="coc-help" class="field-help">Required to submit a proposal.</p>
+    </div>
+
+    <!-- Turnstile -->
+    <div class="turnstile-container">
+      <div class="cf-turnstile"
+           data-sitekey="{{ site.turnstileSitekeyStaging if env == 'preview' else site.turnstileSitekey }}"
+           data-callback="turnstileCallback"
+           aria-label="Security challenge"></div>
+      <p id="turnstile-fallback" hidden>
+        Unable to load the security check. Please <a href="mailto:{{ site.email }}">email your proposal</a> instead.
+      </p>
+    </div>
+
+    <div id="form-status" role="alert" aria-live="polite" class="form-status"></div>
+
+    <button type="submit" id="submit-btn" class="btn btn-primary">Submit proposal</button>
+  </form>
 </div>
+
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<script type="module" src="/js/unconference.js"></script>
