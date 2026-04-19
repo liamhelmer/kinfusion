@@ -37,6 +37,7 @@ function handleRegister(payload) {
     payload.scholarshipNote || '',
     payload.arrivalDay || '',
     payload.leavingDay || '',
+    payload.accommodation || 'camping',
     children.length,
     payload.parentPhone || '',
     payload.dietaryNotes || '',

@@ -4,6 +4,7 @@ const VALID_TIERS = new Set(['300', '350', '400']);
 const VALID_ARRIVAL_DAYS = new Set(['thursday', 'friday', 'saturday']);
 const VALID_LEAVING_DAYS = new Set(['sunday', 'monday']);
 const VALID_DURATIONS = new Set(['30', '60', '90']);
+const VALID_ACCOMMODATIONS = new Set(['camping', 'kdol-single', 'kdol-double', 'preset-tent', 'geodesic-dome']);
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function checkLength(value, max, field) {
@@ -32,6 +33,7 @@ export function validateRegistration(body) {
     VALID_ARRIVAL_DAYS.has(String(body.arrivalDay)) ? null : { valid: false, field: 'arrivalDay', code: 'VALIDATION' },
     checkRequired(body.leavingDay, 'leavingDay'),
     VALID_LEAVING_DAYS.has(String(body.leavingDay)) ? null : { valid: false, field: 'leavingDay', code: 'VALIDATION' },
+    body.accommodation ? (VALID_ACCOMMODATIONS.has(String(body.accommodation)) ? null : { valid: false, field: 'accommodation', code: 'VALIDATION' }) : null,
     body.codeOfConductAccepted === true ? null : { valid: false, field: 'codeOfConductAccepted', code: 'VALIDATION' },
     checkLength(body.pronouns, 100, 'pronouns'),
     checkLength(body.scholarshipNote, 500, 'scholarshipNote'),
