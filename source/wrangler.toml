@@ -9,21 +9,24 @@ binding = "ASSETS"
 
 [[kv_namespaces]]
 binding = "RATE_KV"
-id = "placeholder_replace_with_real_id"
-preview_id = "placeholder_replace_with_real_preview_id"
+id = "7cc76816d9cb445eb2075064a1cdffb1"
+preview_id = "189c1708731a48ae86e6048bbba8557f"
 
 [build]
-command = "npm run build"
+command = "ELEVENTY_ENV=${ELEVENTY_ENV:-preview} npm run build"
 
 [env.preview]
 name = "kinfusion-website-preview"
 # Secrets via: wrangler secret put <NAME> --env preview
-# APPS_SCRIPT_URL — set after T-2.1 (staging Apps Script deployed)
-# APPS_SCRIPT_HMAC_KEY — shared HMAC key with Apps Script
-# FORM_TOKEN_SECRET — separate key for form token signing (if omitted, falls back to APPS_SCRIPT_HMAC_KEY)
-# TURNSTILE_SECRET — Cloudflare Turnstile secret key
+
+[[env.preview.kv_namespaces]]
+binding = "RATE_KV"
+id = "189c1708731a48ae86e6048bbba8557f"
 
 [env.production]
 name = "kinfusion-website"
 # Secrets via: wrangler secret put <NAME> --env production
-# APPS_SCRIPT_URL, APPS_SCRIPT_HMAC_KEY, FORM_TOKEN_SECRET, TURNSTILE_SECRET
+
+[[env.production.kv_namespaces]]
+binding = "RATE_KV"
+id = "7cc76816d9cb445eb2075064a1cdffb1"
