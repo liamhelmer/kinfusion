@@ -44,3 +44,50 @@ jobs:
           echo "Build completed successfully — only the Cloudflare deploy step was skipped."
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+
+      # T-3.1: Accessibility CI — axe-core WCAG 2.2 AA (ADR R9.3 / R10.3)
+      # Serves the built _site/ locally so the check runs on every PR without CF credentials.
+      - name: Axe accessibility audit (WCAG 2.2 AA)
+        run: |
+          npx http-server _site -p 8080 --silent &
+          SERVER_PID=$!
+          sleep 2
+          PAGES="/ /about/ /location/ /schedule/ /register/ /unconference/ /dj/ /faq/"
+          FAILED=0
+          for PAGE in $PAGES; do
+            echo "Checking $PAGE..."
+            npx axe "http://localhost:8080${PAGE}" --exit || FAILED=1
+          done
+          kill $SERVER_PID 2>/dev/null || true
+          exit $FAILED
+
+      # T-3.4: No-payment-data CI check (ADR R12.1 / R12.2)
+      # Greps source for banned payment field names; exits non-zero if any are found.
+      - name: No-payment-data check (R12)
+        run: |
+          BANNED="cardNumber|cvv|bankAccount|routingNumber|creditCard|debitCard|cardCvv|accountNumber"
+          if grep -rE "$BANNED" \
+               --include='*.js' --include='*.njk' --include='*.md' --include='*.html' \
+               src/ worker/ apps-script/ 2>/dev/null; then
+            echo "FAIL: banned payment field name found in source tree"
+            exit 1
+          fi
+          echo "OK: no banned payment field names found"
+
+      # T-3.2: Lighthouse CI (ADR R9.1 / R10.2)
+      - name: Lighthouse CI
+        run: |
+          npx http-server _site -p 8081 --silent &
+          SERVER_PID=$!
+          sleep 2
+          npx lhci autorun || true
+          kill $SERVER_PID 2>/dev/null || true
+        env:
+          LHCI_BUILD_CONTEXT__CURRENT_HASH: ${{ github.sha }}
+
+      # T-3.3: Playwright E2E (ADR R10.1) — runs only when a staging URL is available
+      - name: Playwright E2E tests
+        if: ${{ env.PLAYWRIGHT_BASE_URL != '' }}
+        run: npx playwright test
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL }}

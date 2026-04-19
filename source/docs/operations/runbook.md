@@ -145,3 +145,72 @@ Before going live at kinfusion.dance:
 4. Verify refCode in email matches refCode in sheet row
 5. Run Playwright E2E suite against production URL
 6. Check Worker tail log for structured JSON success events
+
+```bash
+wrangler tail --env production
+```
+
+---
+
+## Production Launch Checklist (T-3.6)
+
+Execute these steps in order when launching to production. All steps preceded by `[ ]` must be executed manually by the site owner.
+
+### Pre-launch verification
+- [ ] All phase-3 CI checks pass on `brains/kinfusion-website` branch
+- [ ] Playwright E2E tests pass against staging (`PLAYWRIGHT_BASE_URL=<staging-url> npx playwright test`)
+- [ ] Phase-2 smoke verified (T-2.13 complete)
+
+### Google Resources
+- [ ] Create production Google Sheet named `KinFusion Campout 2026` (three tabs: Registrations, UnconferenceProposals, DJSignups — same column schema as staging)
+- [ ] Note the production Sheet ID from the URL (long alphanumeric string after `/spreadsheets/d/`)
+- [ ] Create production Apps Script bound to that sheet: Extensions → Apps Script
+- [ ] Set Script Properties (Project settings → Script Properties):
+  - `HMAC_KEY` = `$(openssl rand -hex 32)` — generate fresh
+  - `SHEET_ID` = production Sheet ID
+  - `FROM_EMAIL` = organizer Gmail address
+  - `ORGANIZER_EMAIL` = organizer Gmail address
+  - `BACKUP_DRIVE_FOLDER_ID` = ID of a dedicated backup Drive folder
+  - `NONCE_CACHE_MIN` = `10`
+- [ ] `cd source/apps-script && clasp push && clasp deploy --description "production v1"` — copy deployment URL
+
+### Cloudflare secrets
+- [ ] `openssl rand -hex 32` → save as production HMAC key
+- [ ] `wrangler secret put APPS_SCRIPT_HMAC_KEY --env production`
+- [ ] `wrangler secret put APPS_SCRIPT_URL --env production` (production Web App URL)
+- [ ] `wrangler secret put TURNSTILE_SECRET --env production` (production Turnstile secret)
+- [ ] Set production Turnstile sitekey in `src/_data/site.json` → `turnstileSitekey` field, commit and push
+- [ ] Verify: `wrangler secret list --env production` shows APPS_SCRIPT_HMAC_KEY, APPS_SCRIPT_URL, TURNSTILE_SECRET
+
+### Cloudflare DNS
+- [ ] Log in to `kinfusion.dance` registrar → change nameservers to Cloudflare nameservers (shown in CF Dashboard → DNS → Nameservers)
+- [ ] Wait for propagation (5–60 min; check https://dnschecker.org)
+- [ ] SSL/TLS → enable "Full (strict)"
+- [ ] Enable "Always Use HTTPS"
+- [ ] HSTS: SSL/TLS → Edge Certificates → HTTP Strict Transport Security → Enable (max-age=31536000; includeSubDomains; preload)
+- [ ] Configure Email Routing per the "Email Routing Setup" section above
+
+### GitHub Actions
+- [ ] Add `CF_API_TOKEN` as GitHub Actions repository secret (Workers:Edit permissions)
+- [ ] Add `CF_ACCOUNT_ID` as GitHub Actions repository secret
+
+### Merge and deploy
+- [ ] Merge `brains/kinfusion-website` → `main` via PR
+- [ ] Verify `production.yml` workflow fires and completes successfully in GitHub Actions
+- [ ] Verify `https://kinfusion.dance` loads over HTTPS with valid certificate
+- [ ] Verify `https://www.kinfusion.dance` redirects to apex
+
+### Pre-launch drill (ADR R10.5)
+- [ ] Submit test registration at `https://kinfusion.dance/register/`
+- [ ] Verify sheet row appears in production Registrations tab with all columns populated
+- [ ] Verify refCode in sheet matches refCode displayed to user
+- [ ] Verify confirmation email arrives in organizer Gmail within 30 seconds
+- [ ] Check spam folder — confirm email is not there
+- [ ] Repeat for unconference and DJ signup forms
+- [ ] Verify duplicate submission returns "already received" message
+
+### Final steps
+- [ ] Enable Cloudflare Web Analytics: Dashboard → Analytics & Logs → Web Analytics → Add site
+- [ ] Open production Apps Script → run `installBackupTrigger()` manually once
+- [ ] Open production Apps Script → run `installRetentionTrigger()` manually once
+- [ ] `git tag v1.0.0 && git push origin v1.0.0`

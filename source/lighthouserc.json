@@ -1,0 +1,38 @@
+{
+  "ci": {
+    "collect": {
+      "url": [
+        "http://localhost:8081/",
+        "http://localhost:8081/about/",
+        "http://localhost:8081/location/",
+        "http://localhost:8081/schedule/",
+        "http://localhost:8081/register/",
+        "http://localhost:8081/unconference/",
+        "http://localhost:8081/dj/",
+        "http://localhost:8081/faq/"
+      ],
+      "numberOfRuns": 1,
+      "settings": {
+        "formFactor": "mobile",
+        "throttling": {
+          "rttMs": 150,
+          "throughputKbps": 1638.4,
+          "cpuSlowdownMultiplier": 4
+        }
+      }
+    },
+    "assert": {
+      "preset": "lighthouse:no-pwa",
+      "assertions": {
+        "categories:performance": ["error", { "minScore": 0.85 }],
+        "categories:accessibility": ["error", { "minScore": 0.95 }],
+        "categories:best-practices": ["warn", { "minScore": 0.95 }],
+        "categories:seo": ["warn", { "minScore": 0.95 }]
+      },
+      "aggregationMethod": "pessimistic"
+    },
+    "upload": {
+      "target": "temporary-public-storage"
+    }
+  }
+}
