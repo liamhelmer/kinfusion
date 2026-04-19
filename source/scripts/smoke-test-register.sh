@@ -14,7 +14,8 @@ set -e
 PREVIEW_URL="${PREVIEW_URL:-https://kinfusion-website-preview.workers.dev}"
 # CF test sitekey 1x00000000000000000000AA accepts this token with secret 1x0000000000000000000000000000000AA
 TEST_TURNSTILE_TOKEN="1x0000000000000000000000000000000AA"
-TEST_EMAIL="smoke-test@example.com"
+TEST_EMAIL="smoke-test-$(date +%s)@example.com"
+DEDUP_EMAIL="smoke-dedup@example.com"
 
 echo "=== Smoke test: Registration form ==="
 echo "Preview URL: $PREVIEW_URL"
