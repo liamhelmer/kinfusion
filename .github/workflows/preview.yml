@@ -51,7 +51,11 @@ jobs:
         run: |
           npx http-server _site -p 8080 --silent &
           SERVER_PID=$!
-          sleep 2
+          # Wait for server to be ready (up to 15 seconds)
+          for i in $(seq 1 15); do
+            curl -sf http://localhost:8080/ > /dev/null 2>&1 && break
+            sleep 1
+          done
           PAGES="/ /about/ /location/ /schedule/ /register/ /unconference/ /dj/ /faq/"
           FAILED=0
           for PAGE in $PAGES; do
@@ -74,14 +78,20 @@ jobs:
           fi
           echo "OK: no banned payment field names found"
 
-      # T-3.2: Lighthouse CI (ADR R9.1 / R10.2)
+      # T-3.2: Lighthouse CI (ADR R9.1 / R10.2) — fails on perf <85 or a11y <95 per lighthouserc.json
       - name: Lighthouse CI
         run: |
           npx http-server _site -p 8081 --silent &
           SERVER_PID=$!
-          sleep 2
-          npx lhci autorun || true
+          # Wait for server to be ready (up to 15 seconds)
+          for i in $(seq 1 15); do
+            curl -sf http://localhost:8081/ > /dev/null 2>&1 && break
+            sleep 1
+          done
+          npx lhci autorun
+          LHCI_EXIT=$?
           kill $SERVER_PID 2>/dev/null || true
+          exit $LHCI_EXIT
         env:
           LHCI_BUILD_CONTEXT__CURRENT_HASH: ${{ github.sha }}
 

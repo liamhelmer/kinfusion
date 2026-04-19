@@ -33,6 +33,8 @@
 | `handleRegister` | `source/apps-script/handlers/register.js` | Appends 20-column row to Google Sheet, sends confirmation email with refCode | GmailApp, SpreadsheetApp | Y |
 | `handleUnconference` | `source/apps-script/handlers/unconference.js` | Appends unconference proposal row, sends confirmation email | GmailApp, SpreadsheetApp | Y |
 | `handleDJSignup` | `source/apps-script/handlers/dj.js` | Appends DJ signup row, sends confirmation email | GmailApp, SpreadsheetApp | Y |
+| `runWeeklyBackup` / `installBackupTrigger` | `source/apps-script/backup.js` | Exports operational Sheet as XLSX to Drive weekly (Sunday midnight). Idempotent — skips if today's backup exists. | DriveApp, UrlFetchApp, ScriptApp | Y |
+| `runRetentionCheck` / `installRetentionTrigger` | `source/apps-script/retention.js` | Daily trigger: no-op before 2026-12-12; on/after archives aggregate counts to KinFusion-2026-Archive tab, deletes PII rows, notifies organizer. | SpreadsheetApp, GmailApp, ScriptApp | Y |
 
 ---
 
@@ -43,6 +45,9 @@
 | Eleventy Image | `source/.eleventy.js` | `@11ty/eleventy-img@6.0.0` | Responsive image generation with AVIF/WebP/JPEG output |
 | Cloudflare ASSETS | `source/worker/index.js` | `env.ASSETS.fetch()` | Static asset serving via Cloudflare Workers Static Assets binding |
 | GitHub Actions CI | `.github/workflows/preview.yml`, `production.yml` | GitHub Actions + Wrangler 4 | Preview deploy on non-main branches; production deploy on main |
+| axe-core CLI | `.github/workflows/preview.yml` | `@axe-core/cli@^4` | WCAG 2.2 AA accessibility audit on every PR against locally-served build |
+| Lighthouse CI | `.github/workflows/preview.yml`, `source/lighthouserc.json` | `@lhci/cli@^0.15` | Mobile Lighthouse scores — fails on perf <85 / a11y <95 per ADR R10.2 |
+| Playwright | `source/e2e/`, `source/playwright.config.js` | `@playwright/test@^1.50` | E2E tests for all three forms; golden path, duplicate, rate-limit. Run via PLAYWRIGHT_BASE_URL |
 
 ---
 

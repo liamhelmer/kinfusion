@@ -7,3 +7,8 @@ node_modules/
 .claude/
 docs/plans/.state/
 apps-script/.clasp.json
+# Playwright test artifacts
+e2e/test-results/
+e2e/playwright-report/
+# Lighthouse CI results
+.lighthouseci/
