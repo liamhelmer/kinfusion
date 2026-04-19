@@ -98,22 +98,104 @@ Production deployments are gated — the production Cloudflare project must exis
 
 ## Environment Setup
 
-Before running the Worker locally with form routes, the following secrets must be configured:
+This section documents every provisioning step required before the form backend works.
+Run these steps once per environment (preview and production).
+
+### Step 1: Create the KV Namespace
 
 ```bash
-# Set Cloudflare Turnstile secret key
-wrangler secret put TURNSTILE_SECRET
+# Create RATE_KV namespace for preview (rate-limiting, dedupe, form tokens)
+wrangler kv:namespace create RATE_KV
+# → outputs: { binding = "RATE_KV", id = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" }
+# Paste the id value into wrangler.toml [[kv_namespaces]] id field
 
-# Set Apps Script HMAC key (generate with: openssl rand -hex 32)
-wrangler secret put APPS_SCRIPT_HMAC_KEY
+wrangler kv:namespace create RATE_KV --preview
+# → outputs preview_id — paste into wrangler.toml preview_id field
 
-# Set Apps Script Web App URL (set after T-2.1)
-wrangler secret put APPS_SCRIPT_URL
+# Verify
+wrangler kv:namespace list
 ```
 
-KV namespace setup:
-1. Create the `RATE_KV` namespace in the Cloudflare dashboard (Workers & Pages → KV)
-2. Copy the namespace ID into `wrangler.toml` under `[[kv_namespaces]]`
+### Step 2: Create Turnstile Widget
+
+1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com/) → Turnstile → Add Site
+2. Set the following hostnames:
+   - `kinfusion.dance`
+   - `kinfusion-website-preview.<your-account>.workers.dev` (preview)
+3. Copy the **Site Key** → paste into `source/src/_data/site.json` as `turnstileSitekey`
+4. Copy the **Secret Key** for the next step
+
+```bash
+# Set the Turnstile secret key
+wrangler secret put TURNSTILE_SECRET
+# Paste the Secret Key from the Turnstile dashboard when prompted
+```
+
+For staging/local dev, use the test sitekey `1x00000000000000000000AA` (already in `site.json`
+as `turnstileSitekeyStaging`) — it always passes without showing a challenge.
+
+### Step 3: Generate and Set HMAC Key
+
+```bash
+# Generate a 32-byte random hex key
+openssl rand -hex 32
+# Save the output — you'll need it for both Worker and Apps Script Script Properties
+
+# Set the Worker secret
+wrangler secret put APPS_SCRIPT_HMAC_KEY
+# Paste the generated hex string when prompted
+```
+
+### Step 4: Bootstrap Apps Script (placeholder)
+
+```bash
+# Set placeholder URL — real URL set after Apps Script is deployed (T-2.1)
+wrangler secret put APPS_SCRIPT_URL
+# Paste: https://script.google.com/TBD/exec
+```
+
+After completing T-2.1 (staging Apps Script deployed), update with the real URL:
+```bash
+wrangler secret put APPS_SCRIPT_URL --env preview
+# Paste the real staging Web App URL
+```
+
+### Step 5: Verify All Secrets Are Set
+
+```bash
+wrangler secret list
+# Should show: TURNSTILE_SECRET, APPS_SCRIPT_URL, APPS_SCRIPT_HMAC_KEY
+# Values are hidden — only names are shown
+```
+
+### Apps Script Setup (for T-2.1)
+
+```bash
+# Install clasp globally
+npm install -g @google/clasp
+
+# Login with the organizer Google account
+clasp login
+
+# After creating the staging Google Sheet manually (3 tabs: Registrations,
+# UnconferenceProposals, DJSignups), bind a new Apps Script project:
+cd source/apps-script
+clasp create --type sheets --title "KinFusion Forms (staging)" --parentId <STAGING_SHEET_ID>
+# This creates .clasp.json (gitignored — per-developer file)
+
+# Push source code to Apps Script
+clasp push
+
+# Deploy as Web App (run from Apps Script editor or CLI)
+clasp deploy --description "staging v1"
+# Copy the Web App URL → use for APPS_SCRIPT_URL secret above
+
+# Set Script Properties in Apps Script editor → Project Settings → Script Properties:
+# HMAC_KEY = <same hex value as APPS_SCRIPT_HMAC_KEY wrangler secret>
+# SHEET_ID = <staging sheet ID from the URL: /spreadsheets/d/SHEET_ID/edit>
+# FROM_EMAIL = <organizer Gmail address e.g. liam.helmer@gmail.com>
+# NONCE_CACHE_MIN = 10
+```
 
 ---
 
