@@ -27,6 +27,14 @@ id = "189c1708731a48ae86e6048bbba8557f"
 name = "kinfusion-website"
 # Secrets via: wrangler secret put <NAME> --env production
 
+[[env.production.routes]]
+pattern = "kinfusion.dance"
+custom_domain = true
+
+[[env.production.routes]]
+pattern = "www.kinfusion.dance"
+custom_domain = true
+
 [[env.production.kv_namespaces]]
 binding = "RATE_KV"
 id = "7cc76816d9cb445eb2075064a1cdffb1"
