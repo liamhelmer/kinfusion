@@ -6,7 +6,8 @@
   "scripts": {
     "build": "eleventy",
     "start": "eleventy --serve",
-    "test": "echo 'No tests in phase 1' && exit 0"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [],
   "author": "Liam Helmer",
@@ -17,5 +18,9 @@
   "dependencies": {
     "@11ty/eleventy": "3.1.5",
     "@11ty/eleventy-img": "6.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.5.41",
+    "vitest": "^2.1.9"
   }
 }
