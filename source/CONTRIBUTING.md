@@ -207,3 +207,63 @@ clasp deploy --description "staging v1"
 ## Branch Protection
 
 The `main` branch requires a reviewer approval before merging. This is documented in `docs/operations/runbook.md`.
+
+---
+
+## Dependency Freeze (post-2026-08-01)
+
+Per ADR R2.1: after **2026-08-01**, Eleventy major or minor version upgrades **MUST NOT** be applied until after **2026-09-14** (post-event). Patch upgrades within 3.1.x are permitted.
+
+Current pinned versions:
+- `@11ty/eleventy`: `3.1.5`
+- `@11ty/eleventy-img`: `6.0.0`
+
+To upgrade after 2026-09-14: run `npm update @11ty/eleventy`, verify the build, update `MANIFEST.md`.
+
+---
+
+## Post-Event Retention Deadline (2026-12-12)
+
+Personal data in the Google Sheets must be deleted by **2026-12-12** (90 days after event end 2026-09-13) per ADR R8.2.
+
+The `apps-script/retention.js` daily trigger handles this automatically — it is a no-op until that date. On or after 2026-12-12 it archives aggregate counts and deletes all PII rows.
+
+**Set a calendar reminder for 2026-12-13** to verify the retention delete ran:
+1. Open the production Google Sheet
+2. Confirm the `KinFusion-2026-Archive` tab exists with row counts
+3. Confirm `Registrations`, `UnconferenceProposals`, `DJSignups` tabs are empty (headers only)
+4. Check organizer inbox for the notification email from Apps Script
+
+If the trigger did not run automatically: open the Apps Script editor → Triggers → verify `runRetentionCheck` is active, then run it manually.
+
+---
+
+## Lessons Learned
+
+Known friction points encountered during development — read before making changes.
+
+### HEIC Conversion
+
+The `heif-convert` tool (Linux) must be installed separately (`sudo apt install libheif-examples`). On macOS use `sips`. On a fresh machine this step is easy to miss. The build will fail with a clear error if `.HEIC` files are present in `src/assets/`, but the error only appears at build time, not at `npm install` time.
+
+### clasp First-Time OAuth
+
+Running `clasp login` for the first time opens a browser OAuth flow. In headless or SSH environments you must use `clasp login --no-localhost` and follow the manual code-copy flow. The generated `~/.clasprc.json` file is per-developer and must never be committed. The project `.clasp.json` is also per-developer and is gitignored — each developer must run `clasp create` or `clasp clone` once to set up their local binding.
+
+After `clasp push`, always run `clasp deploy --description "vN"` to create a new versioned deployment — the Web App URL does not change on push without an explicit deploy.
+
+### Turnstile + CSP Interaction
+
+The Cloudflare Turnstile managed widget requires `challenges.cloudflare.com` in the CSP `frame-src`, `script-src`, and `connect-src` directives. A too-strict CSP will silently break the widget (the iframe loads but the challenge never resolves). This was caught during Phase 2 hardening. Always verify the Turnstile widget in a real browser after any CSP change — unit tests cannot catch this.
+
+### Email Deliverability Uncertainty
+
+GmailApp sends confirmation emails from the organizer's Gmail address (`@gmail.com`), not from `hello@kinfusion.dance`. This is by design (all-Google identity chain avoids SPF/DKIM/DMARC gaps), but it means the `From:` line is not the branded domain. Deliverability to external inboxes was not confirmed against a live production run during development — it must be verified as part of the T-3.6 pre-launch drill. If emails land in spam, investigate Gmail sending rate limits and consider adding a custom `X-Entity-Ref-ID` header.
+
+### Staging vs Production Apps Script
+
+Each environment has a completely separate Apps Script deployment and Google Sheet. The staging deployment URL is stored in `wrangler.toml` `[env.preview]` as a `vars` entry; the production URL is a `wrangler secret`. Never share Script Property values between staging and production — in particular, the `HMAC_KEY` values must be different.
+
+### production.yml Deploy Gate
+
+The production workflow was written with an early-exit guard that prevented deploying before the production Cloudflare project existed. This guard was removed in Phase 3 (commit 7537435). If you see the production workflow completing with a "skipping deploy" log message, the guard may have been accidentally reintroduced — check `.github/workflows/production.yml` for `CF_API_TOKEN` conditional logic.

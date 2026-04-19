@@ -29,12 +29,17 @@
 | `validateRegistration` / `validateUnconference` / `validateDJ` | `source/worker/validation.js` | Server-side field validation per R7.3 for all three form endpoints | — | Y |
 | `signAndForward` | `source/worker/hmac.js` | HMAC-SHA256 signs payload (ts:nonce:bodyHash), embeds `_ts/_nonce/_sig` as body fields, POSTs to Apps Script | `APPS_SCRIPT_HMAC_KEY`, `APPS_SCRIPT_URL` | Y |
 | `initForm` | `source/src/js/form-handler.js` | Shared browser form handler: fetches form token, registers Turnstile callback, 5s timeout fallback, submits JSON, maps server error codes to user messages | Browser Fetch API | Y |
+| Registration form init | `source/src/js/register.js` | Page-level script: selects `#registration-form` and calls `initForm` with register config | `form-handler.js` | Y |
+| Unconference form init | `source/src/js/unconference.js` | Page-level script: selects `#unconference-form` and calls `initForm` with unconference config | `form-handler.js` | Y |
+| DJ form init | `source/src/js/dj.js` | Page-level script: selects `#dj-form` and calls `initForm` with dj-signup config | `form-handler.js` | Y |
 | Apps Script `doPost` gateway | `source/apps-script/gateway.js` | Verifies clock skew, HMAC signature, nonce replay, dispatches to form handlers | Apps Script LockService, CacheService, PropertiesService | Y |
-| `handleRegister` | `source/apps-script/handlers/register.js` | Appends 20-column row to Google Sheet, sends confirmation email with refCode | GmailApp, SpreadsheetApp | Y |
-| `handleUnconference` | `source/apps-script/handlers/unconference.js` | Appends unconference proposal row, sends confirmation email | GmailApp, SpreadsheetApp | Y |
-| `handleDJSignup` | `source/apps-script/handlers/dj.js` | Appends DJ signup row, sends confirmation email | GmailApp, SpreadsheetApp | Y |
+| `generateRefCode` / email builders | `source/apps-script/handlers/shared.js` | Shared helpers: generates `KF-XXXXX` refCode (collision-safe RNG), builds HTML confirmation email bodies for all three form types | — | Y |
+| `handleRegister` | `source/apps-script/handlers/register.js` | Appends 20-column row to Google Sheet, sends confirmation email with refCode | GmailApp, SpreadsheetApp, shared.js | Y |
+| `handleUnconference` | `source/apps-script/handlers/unconference.js` | Appends unconference proposal row, sends confirmation email | GmailApp, SpreadsheetApp, shared.js | Y |
+| `handleDJSignup` | `source/apps-script/handlers/dj.js` | Appends DJ signup row, sends confirmation email | GmailApp, SpreadsheetApp, shared.js | Y |
 | `runWeeklyBackup` / `installBackupTrigger` | `source/apps-script/backup.js` | Exports operational Sheet as XLSX to Drive weekly (Sunday midnight). Idempotent — skips if today's backup exists. | DriveApp, UrlFetchApp, ScriptApp | Y |
 | `runRetentionCheck` / `installRetentionTrigger` | `source/apps-script/retention.js` | Daily trigger: no-op before 2026-12-12; on/after archives aggregate counts to KinFusion-2026-Archive tab, deletes PII rows, notifies organizer. | SpreadsheetApp, GmailApp, ScriptApp | Y |
+| smoke-test-register.sh | `source/scripts/smoke-test-register.sh` | Bash script for T-2.9 first-form smoke test against the staging preview Worker. Sends a `curl` POST and validates the JSON response contains a refCode. | `curl`, `jq` | Y |
 
 ---
 

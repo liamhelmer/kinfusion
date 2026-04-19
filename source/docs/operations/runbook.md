@@ -101,12 +101,13 @@ If `kinfusion.dance` becomes unreachable:
 Per ADR R8.2, personal data in the operational Google Sheet must be deleted by **2026-12-12** (90 days after event end 2026-09-13).
 
 The `retention.js` Apps Script trigger handles this automatically:
-- Daily trigger fires after 2026-12-12
-- Archives aggregate counts (no PII) to `KinFusion-2026-Archive` sheet
-- Deletes rows from operational sheets
-- Sends notification email to organizer
+- Daily trigger fires starting from the first run after installation
+- **Before 2026-12-12:** trigger fires daily but is a complete no-op — it logs "retention not due yet" and exits. No data is touched.
+- **On or after 2026-12-12:** archives aggregate counts (no PII) to `KinFusion-2026-Archive` sheet, deletes all data rows from operational sheets, sends notification email to organizer
 
-Manual verification: check the Archive sheet on or after 2026-12-12 to confirm deletion ran. If not: open Apps Script editor → Triggers → verify daily trigger is active.
+The `DELETE_AFTER_DATE` constant in `retention.js` is `2026-12-12T00:00:00Z`. Do not modify this value.
+
+Manual verification: check the Archive sheet on or after 2026-12-12 to confirm deletion ran. If not: open Apps Script editor → Triggers → verify daily trigger `runRetentionCheck` is active, then run it manually.
 
 ---
 
