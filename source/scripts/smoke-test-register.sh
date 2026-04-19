@@ -12,7 +12,8 @@
 set -e
 
 PREVIEW_URL="${PREVIEW_URL:-https://kinfusion-website-preview.workers.dev}"
-TEST_TURNSTILE_TOKEN="XXXX.DUMMY.TOKEN.XXXX"
+# CF test sitekey 1x00000000000000000000AA accepts this token with secret 1x0000000000000000000000000000000AA
+TEST_TURNSTILE_TOKEN="1x0000000000000000000000000000000AA"
 TEST_EMAIL="smoke-test@example.com"
 
 echo "=== Smoke test: Registration form ==="
@@ -38,8 +39,13 @@ REGISTER_RESP=$(curl -s -X POST "$PREVIEW_URL/api/register" \
     \"pronouns\": \"they/them\",
     \"tier\": \"350\",
     \"arrivalDay\": \"friday\",
+    \"leavingDay\": \"sunday\",
+    \"accommodation\": \"camping\",
+    \"worktrade\": false,
+    \"scholarshipRequest\": false,
     \"codeOfConductAccepted\": true,
     \"photoConsent\": false,
+    \"children\": [],
     \"website\": \"\"
   }")
 echo "Response: $REGISTER_RESP"
@@ -59,8 +65,13 @@ REPLAY_RESP=$(curl -s -X POST "$PREVIEW_URL/api/register" \
     \"email\": \"$TEST_EMAIL\",
     \"tier\": \"350\",
     \"arrivalDay\": \"friday\",
+    \"leavingDay\": \"sunday\",
+    \"accommodation\": \"camping\",
+    \"worktrade\": false,
+    \"scholarshipRequest\": false,
     \"codeOfConductAccepted\": true,
     \"photoConsent\": false,
+    \"children\": [],
     \"website\": \"\"
   }")
 echo "Replay response (expect ok:true with 'already received'): $REPLAY_RESP"

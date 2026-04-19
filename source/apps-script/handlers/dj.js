@@ -49,12 +49,16 @@ function handleDJSignup(payload) {
     'Kin-Fusion Campout Team',
   ].join('\n');
 
-  MailApp.sendEmail(payload.email, subject, plainBody, {
-    from: fromEmail,
-    replyTo: 'hello@kinfusion.dance',
-    htmlBody: buildDJEmailHtml(payload.djName, refCode),
-    name: 'Kin-Fusion Campout',
-  });
+  try {
+    MailApp.sendEmail(payload.email, subject, plainBody, {
+      from: fromEmail,
+      replyTo: 'hello@kinfusion.dance',
+      htmlBody: buildDJEmailHtml(payload.djName, refCode),
+      name: 'Kin-Fusion Campout',
+    });
+  } catch (mailErr) {
+    Logger.log('DJ email failed (auth not yet granted?): ' + mailErr.message);
+  }
 
   Logger.log('DJ signup: ' + refCode);
   return { ok: true, refCode: refCode };

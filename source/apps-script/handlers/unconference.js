@@ -48,12 +48,16 @@ function handleUnconference(payload) {
     'Kin-Fusion Campout Team',
   ].join('\n');
 
-  MailApp.sendEmail(payload.email, subject, plainBody, {
-    from: fromEmail,
-    replyTo: 'hello@kinfusion.dance',
-    htmlBody: buildUnconferenceEmailHtml(payload.proposerName, payload.workshopTitle, refCode),
-    name: 'Kin-Fusion Campout',
-  });
+  try {
+    MailApp.sendEmail(payload.email, subject, plainBody, {
+      from: fromEmail,
+      replyTo: 'hello@kinfusion.dance',
+      htmlBody: buildUnconferenceEmailHtml(payload.proposerName, payload.workshopTitle, refCode),
+      name: 'Kin-Fusion Campout',
+    });
+  } catch (mailErr) {
+    Logger.log('Unconference email failed (auth not yet granted?): ' + mailErr.message);
+  }
 
   Logger.log('Unconference proposal: ' + refCode);
   return { ok: true, refCode: refCode };

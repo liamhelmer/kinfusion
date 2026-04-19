@@ -166,12 +166,16 @@ function handleRegister(payload) {
     total: pricing.total,
   };
 
-  MailApp.sendEmail(payload.email, subject, plainBody, {
-    from: fromEmail,
-    replyTo: 'hello@kinfusion.dance',
-    htmlBody: buildRegistrationEmailHtml(emailData),
-    name: 'Kin-Fusion Campout',
-  });
+  try {
+    MailApp.sendEmail(payload.email, subject, plainBody, {
+      from: fromEmail,
+      replyTo: 'hello@kinfusion.dance',
+      htmlBody: buildRegistrationEmailHtml(emailData),
+      name: 'Kin-Fusion Campout',
+    });
+  } catch (mailErr) {
+    Logger.log('Registration email failed (auth not yet granted?): ' + mailErr.message);
+  }
 
   Logger.log('Registration: ' + refCode + ' for ' + payload.email);
   return { ok: true, refCode: refCode };

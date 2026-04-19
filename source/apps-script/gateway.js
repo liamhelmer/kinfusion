@@ -98,7 +98,7 @@ function doPost(e) {
       }
     }
   } catch (err) {
-    Logger.log('gateway error: ' + err.message);
+    Logger.log('gateway error: ' + err.message + '\n' + (err.stack || ''));
     return jsonResponse({ ok: false, code: 'INTERNAL_ERROR' });
   }
 }
