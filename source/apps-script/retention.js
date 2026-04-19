@@ -38,10 +38,9 @@ function _runRetentionCheck(now, deleteAfter) {
 
   var props = PropertiesService.getScriptProperties();
 
-  // Primary idempotency check: script property written only after successful completion
-  var completedAt = props.getProperty(RETENTION_COMPLETED_PROP);
-  if (completedAt) {
-    Logger.log('retention: already completed at ' + completedAt + ' — idempotent skip');
+  // Fast path: check before acquiring lock to avoid unnecessary contention
+  if (props.getProperty(RETENTION_COMPLETED_PROP)) {
+    Logger.log('retention: already completed — idempotent skip (pre-lock)');
     return { action: 'noop', reason: 'already_completed' };
   }
 
@@ -53,78 +52,100 @@ function _runRetentionCheck(now, deleteAfter) {
     return { action: 'error', reason: 'missing_sheet_id' };
   }
 
-  var ss = SpreadsheetApp.openById(sheetId);
+  // Acquire script lock to prevent concurrent executions from both passing the
+  // idempotency check. waitLock throws if lock not acquired within 30 s.
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
 
-  // Collect aggregate counts BEFORE any deletion
-  var counts = {};
-  var opSheets = {};
-  for (var i = 0; i < OPERATIONAL_TABS.length; i++) {
-    var tabName = OPERATIONAL_TABS[i];
-    var sheet = ss.getSheetByName(tabName);
-    opSheets[tabName] = sheet;
-    counts[tabName] = sheet ? Math.max(0, sheet.getLastRow() - 1) : 0;
+  try {
+    // Re-check after acquiring lock: another execution may have completed first
+    var completedAt = props.getProperty(RETENTION_COMPLETED_PROP);
+    if (completedAt) {
+      Logger.log('retention: already completed at ' + completedAt + ' — idempotent skip (post-lock)');
+      return { action: 'noop', reason: 'already_completed' };
+    }
+
+    var ss = SpreadsheetApp.openById(sheetId);
+
+    // Collect aggregate counts BEFORE any deletion
+    var counts = {};
+    var opSheets = {};
+    for (var i = 0; i < OPERATIONAL_TABS.length; i++) {
+      var tabName = OPERATIONAL_TABS[i];
+      var sheet = ss.getSheetByName(tabName);
+      opSheets[tabName] = sheet;
+      counts[tabName] = sheet ? Math.max(0, sheet.getLastRow() - 1) : 0;
+    }
+
+    // Create or clear the archive tab
+    var archiveSheet = ss.getSheetByName(ARCHIVE_TAB_NAME);
+    if (!archiveSheet) {
+      archiveSheet = ss.insertSheet(ARCHIVE_TAB_NAME);
+    } else {
+      archiveSheet.clearContents();
+    }
+
+    var archiveTimestamp = Utilities.formatDate(now, 'UTC', 'yyyy-MM-dd HH:mm:ss') + ' UTC';
+    archiveSheet.appendRow(['archived_at', 'tab', 'row_count']);
+    for (var j = 0; j < OPERATIONAL_TABS.length; j++) {
+      var tab = OPERATIONAL_TABS[j];
+      archiveSheet.appendRow([archiveTimestamp, tab, counts[tab]]);
+    }
+    archiveSheet.setFrozenRows(1);
+
+    Logger.log('retention: archived counts — ' + JSON.stringify(counts));
+
+    // Delete data rows using the previously-captured counts to avoid race condition
+    for (var k = 0; k < OPERATIONAL_TABS.length; k++) {
+      var opTabName = OPERATIONAL_TABS[k];
+      var opSheet = opSheets[opTabName];
+      var rowCount = counts[opTabName];
+      if (opSheet && rowCount > 0) {
+        opSheet.deleteRows(2, rowCount);
+      }
+    }
+
+    Logger.log('retention: operational rows deleted');
+
+    // Mark completion immediately after archive+delete — treat email as best-effort.
+    // Writing the marker here ensures re-runs are blocked even if notification fails.
+    props.setProperty(RETENTION_COMPLETED_PROP, archiveTimestamp);
+
+  } finally {
+    lock.releaseLock();
   }
 
-  // Create or clear the archive tab
-  var archiveSheet = ss.getSheetByName(ARCHIVE_TAB_NAME);
-  if (!archiveSheet) {
-    archiveSheet = ss.insertSheet(ARCHIVE_TAB_NAME);
-  } else {
-    archiveSheet.clearContents();
-  }
+  // Notification is best-effort: failure does NOT prevent completion from being recorded.
+  if (organizerEmail) {
+    try {
+      var subject = 'Kin-Fusion Campout 2026 — 90-day retention process complete';
+      var body = [
+        'This is an automated notification from the Kin-Fusion Campout data retention trigger.',
+        '',
+        'Aggregate counts have been archived and personal data rows have been deleted from',
+        'the operational Google Sheet, as required by the event privacy policy.',
+        '',
+        'Archive summary (aggregate counts only — no personal information retained):',
+        '  Registrations: ' + counts['Registrations'] + ' rows deleted',
+        '  Unconference Proposals: ' + counts['UnconferenceProposals'] + ' rows deleted',
+        '  DJ Signups: ' + counts['DJSignups'] + ' rows deleted',
+        '',
+        'Completed at: ' + archiveTimestamp,
+        '',
+        'The "' + ARCHIVE_TAB_NAME + '" tab contains only the row counts above — no personal',
+        'information. Individual data rows have been permanently deleted from operational tabs.',
+        '',
+        '— Automated trigger',
+      ].join('\n');
 
-  var archiveTimestamp = Utilities.formatDate(now, 'UTC', 'yyyy-MM-dd HH:mm:ss') + ' UTC';
-  archiveSheet.appendRow(['archived_at', 'tab', 'row_count']);
-  for (var j = 0; j < OPERATIONAL_TABS.length; j++) {
-    var tab = OPERATIONAL_TABS[j];
-    archiveSheet.appendRow([archiveTimestamp, tab, counts[tab]]);
-  }
-  archiveSheet.setFrozenRows(1);
-
-  Logger.log('retention: archived counts — ' + JSON.stringify(counts));
-
-  // Delete data rows using the previously-captured counts to avoid race condition
-  for (var k = 0; k < OPERATIONAL_TABS.length; k++) {
-    var opTabName = OPERATIONAL_TABS[k];
-    var opSheet = opSheets[opTabName];
-    var rowCount = counts[opTabName];
-    if (opSheet && rowCount > 0) {
-      opSheet.deleteRows(2, rowCount);
+      GmailApp.sendEmail(organizerEmail, subject, body, {
+        replyTo: 'hello@kinfusion.dance',
+      });
+      Logger.log('retention: notification sent to ' + organizerEmail);
+    } catch (e) {
+      Logger.log('retention: notification failed (non-fatal) — ' + e.message);
     }
   }
-
-  Logger.log('retention: operational rows deleted');
-
-  // Send notification email
-  if (organizerEmail) {
-    var subject = 'Kin-Fusion Campout 2026 — 90-day retention process complete';
-    var body = [
-      'This is an automated notification from the Kin-Fusion Campout data retention trigger.',
-      '',
-      'Aggregate counts have been archived and personal data rows have been deleted from',
-      'the operational Google Sheet, as required by the event privacy policy.',
-      '',
-      'Archive summary (aggregate counts only — no personal information retained):',
-      '  Registrations: ' + counts['Registrations'] + ' rows deleted',
-      '  Unconference Proposals: ' + counts['UnconferenceProposals'] + ' rows deleted',
-      '  DJ Signups: ' + counts['DJSignups'] + ' rows deleted',
-      '',
-      'Completed at: ' + archiveTimestamp,
-      '',
-      'The "' + ARCHIVE_TAB_NAME + '" tab contains only the row counts above — no personal',
-      'information. Individual data rows have been permanently deleted from operational tabs.',
-      '',
-      '— Automated trigger',
-    ].join('\n');
-
-    GmailApp.sendEmail(organizerEmail, subject, body, {
-      replyTo: 'hello@kinfusion.dance',
-    });
-    Logger.log('retention: notification sent to ' + organizerEmail);
-  }
-
-  // Mark completion only after archive + delete + notify all succeeded
-  props.setProperty(RETENTION_COMPLETED_PROP, archiveTimestamp);
 
   return {
     action: 'deleted',

@@ -50,7 +50,7 @@ jobs:
           PLAYWRIGHT_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL }}
 
       - name: Deploy to Cloudflare Workers (production)
-        if: ${{ env.CF_API_TOKEN != '' }}
+        if: ${{ secrets.CF_API_TOKEN != '' }}
         run: npx wrangler deploy --env production
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
@@ -59,10 +59,8 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
 
       - name: Skip deploy (not yet configured)
-        if: ${{ env.CF_API_TOKEN == '' }}
+        if: ${{ secrets.CF_API_TOKEN == '' }}
         run: |
           echo "Production deploy skipped."
           echo "Reason: CF_API_TOKEN not set, or production Cloudflare project not yet bound (pending T-3.6)."
           echo "Build and E2E tests completed -- set CF_API_TOKEN and CF_ACCOUNT_ID to enable production deploys."
-        env:
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}

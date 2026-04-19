@@ -19,34 +19,43 @@ function runWeeklyBackup() {
 
   var folder = DriveApp.getFolderById(folderId);
 
-  // Idempotent: skip if backup for today already exists
-  var existing = folder.getFilesByName(fileName);
-  if (existing.hasNext()) {
-    Logger.log('backup: file already exists for today: ' + fileName);
-    return;
+  // Script lock prevents concurrent runs from racing through the existence check
+  // and creating duplicate backup files.
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+
+  try {
+    // Idempotent: skip if backup for today already exists
+    var existing = folder.getFilesByName(fileName);
+    if (existing.hasNext()) {
+      Logger.log('backup: file already exists for today: ' + fileName);
+      return;
+    }
+
+    // Export as XLSX via Drive export URL
+    var exportUrl = 'https://docs.google.com/spreadsheets/d/' + sheetId + '/export?format=xlsx';
+    var token = ScriptApp.getOAuthToken();
+    var response = UrlFetchApp.fetch(exportUrl, {
+      headers: { Authorization: 'Bearer ' + token },
+      muteHttpExceptions: true,
+    });
+
+    if (response.getResponseCode() !== 200) {
+      throw new Error('backup: export failed with HTTP ' + response.getResponseCode());
+    }
+
+    var blob = response.getBlob().setName(fileName);
+    folder.createFile(blob);
+    Logger.log('backup: created ' + fileName + ' in folder ' + folderId);
+  } finally {
+    lock.releaseLock();
   }
-
-  // Export as XLSX via Drive export URL
-  var exportUrl = 'https://docs.google.com/spreadsheets/d/' + sheetId + '/export?format=xlsx';
-  var token = ScriptApp.getOAuthToken();
-  var response = UrlFetchApp.fetch(exportUrl, {
-    headers: { Authorization: 'Bearer ' + token },
-    muteHttpExceptions: true,
-  });
-
-  if (response.getResponseCode() !== 200) {
-    Logger.log('backup: export failed with status ' + response.getResponseCode());
-    return;
-  }
-
-  var blob = response.getBlob().setName(fileName);
-  folder.createFile(blob);
-  Logger.log('backup: created ' + fileName + ' in folder ' + folderId);
 }
 
 /**
  * Run once manually in the Apps Script editor to install the weekly trigger.
  * Safe to call multiple times — checks for existing trigger first.
+ * Note: trigger runs in the project timezone (set to UTC in File -> Project settings).
  */
 function installBackupTrigger() {
   var triggers = ScriptApp.getProjectTriggers();
@@ -61,5 +70,5 @@ function installBackupTrigger() {
     .onWeekDay(ScriptApp.WeekDay.SUNDAY)
     .atHour(0)
     .create();
-  Logger.log('installBackupTrigger: weekly Sunday midnight trigger installed');
+  Logger.log('installBackupTrigger: weekly Sunday hour-0 trigger installed (runs in project timezone)');
 }
