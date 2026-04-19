@@ -1,0 +1,254 @@
+---
+title: "Register"
+layout: base.njk
+description: "Apply to attend Kin-Fusion Campout 2026 — a fusion dance unconference on Saltspring Island, September 11-13."
+---
+<div class="container">
+  <div id="register-intro">
+    <h1>Apply to Attend</h1>
+
+    <div class="notice">
+      <p><strong>This is an application, not a guaranteed spot.</strong> We review applications and confirm participants by email. Payment is made after acceptance via Interac e-transfer or Wyse.</p>
+    </div>
+
+    <h2>Sliding-Scale Pricing</h2>
+    <ul>
+      <li><strong>$300</strong> — Community/solidarity rate</li>
+      <li><strong>$350</strong> — Standard rate</li>
+      <li><strong>$400</strong> — Sustainer rate (support a scholarship)</li>
+    </ul>
+    <p>Partial scholarships are available — just let us know in your application.</p>
+    <p><strong>Kids 12 and under are free.</strong></p>
+  </div>
+
+  <noscript>
+    <div class="noscript-notice">
+      <p>This form requires JavaScript. Please <a href="mailto:{{ site.email }}">email us</a> to register.</p>
+    </div>
+  </noscript>
+
+  <form id="registration-form" novalidate aria-label="Registration application">
+    <!-- Honeypot: hidden from humans and screen readers, never visible or tab-accessible -->
+    <div class="honeypot" aria-hidden="true">
+      <label for="website-hp">Leave this blank</label>
+      <input type="text" name="website" id="website-hp" tabindex="-1" autocomplete="off">
+    </div>
+
+    <!-- Personal information -->
+    <fieldset>
+      <legend>About you</legend>
+
+      <div class="field">
+        <label for="fullName">Full name <span aria-hidden="true">*</span></label>
+        <input type="text" id="fullName" name="fullName" required aria-required="true"
+               maxlength="100" autocomplete="name"
+               aria-describedby="fullName-help">
+        <p id="fullName-help" class="field-help">Your preferred name for correspondence</p>
+      </div>
+
+      <div class="field">
+        <label for="email">Email address <span aria-hidden="true">*</span></label>
+        <input type="email" id="email" name="email" required aria-required="true"
+               autocomplete="email" aria-describedby="email-help">
+        <p id="email-help" class="field-help">We'll send your reference code here</p>
+      </div>
+
+      <div class="field">
+        <label for="pronouns">Pronouns (optional)</label>
+        <input type="text" id="pronouns" name="pronouns" maxlength="50"
+               placeholder="e.g. they/them, she/her" autocomplete="off">
+      </div>
+    </fieldset>
+
+    <!-- Pricing tier -->
+    <fieldset>
+      <legend>Sliding-scale contribution <span aria-hidden="true">*</span></legend>
+      <p>Choose the tier that works for you — all tiers are equally welcome.</p>
+      <label class="radio-label">
+        <input type="radio" name="tier" value="300" required aria-required="true">
+        <span><strong>$300</strong> — Community/solidarity rate</span>
+      </label>
+      <label class="radio-label">
+        <input type="radio" name="tier" value="350">
+        <span><strong>$350</strong> — Standard rate</span>
+      </label>
+      <label class="radio-label">
+        <input type="radio" name="tier" value="400">
+        <span><strong>$400</strong> — Sustainer rate (supports scholarships)</span>
+      </label>
+    </fieldset>
+
+    <!-- Scholarship + Worktrade -->
+    <div class="fieldset-pair">
+      <fieldset>
+        <legend>Scholarship (optional)</legend>
+        <p class="field-help">Partial scholarships of up to 50% off the registration fee are available. Scholarships cover registration only — accommodation costs are not included.</p>
+        <label class="checkbox-label">
+          <input type="checkbox" name="scholarshipRequest" id="scholarshipRequest">
+          <span>I would like to be considered for a partial scholarship</span>
+        </label>
+        <div class="field" id="scholarshipNoteField">
+          <label for="scholarshipNote">A few words about your situation (optional)</label>
+          <textarea id="scholarshipNote" name="scholarshipNote" maxlength="500" rows="3"
+                    aria-describedby="scholarshipNote-help"></textarea>
+          <p id="scholarshipNote-help" class="field-help">Max 500 characters. Kept confidential.</p>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Worktrade (optional)</legend>
+        <p class="field-help">A limited number of worktrade spots are available. Worktrade participants help with food service in exchange for a reduction on their registration fee. If you'd like to be considered, check the box below and we'll be in touch with details.</p>
+        <label class="checkbox-label">
+          <input type="checkbox" name="worktrade" id="worktrade">
+          <span>I'd like to be considered for worktrade</span>
+        </label>
+      </fieldset>
+    </div>
+
+    <!-- Arrival and logistics -->
+    <fieldset>
+      <legend>Logistics</legend>
+
+      <div class="field">
+        <label for="arrivalDay">Arrival day <span aria-hidden="true">*</span></label>
+        <select id="arrivalDay" name="arrivalDay" required aria-required="true">
+          <option value="">Select your arrival day&hellip;</option>
+          <option value="thursday">Thursday, September 10 (early arrivals)</option>
+          <option value="friday">Friday, September 11</option>
+          <option value="saturday">Saturday, September 12</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="leavingDay">Departure day <span aria-hidden="true">*</span></label>
+        <select id="leavingDay" name="leavingDay" required aria-required="true">
+          <option value="">Select your departure day&hellip;</option>
+          <option value="sunday">Sunday, September 13</option>
+          <option value="monday">Monday, September 14</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="checkbox-label">
+          <input type="checkbox" id="hasChildrenCheckbox" name="hasChildren">
+          <span>I have children under 13 attending with me <span class="field-help">(kids 12 and under are free)</span></span>
+        </label>
+      </div>
+
+      <div class="field" id="childrenField" hidden>
+        <p class="field-help">Add each child's name and age below.</p>
+        <div id="children-list" aria-label="Children attending"></div>
+        <button type="button" id="add-child-btn" class="btn btn-secondary btn-sm">+ Add a child</button>
+      </div>
+
+      <div class="field" id="parentPhoneField" hidden>
+        <label for="parentPhone">Emergency contact number(s) for children <span aria-hidden="true">*</span></label>
+        <input type="tel" id="parentPhone" name="parentPhone" maxlength="50"
+               autocomplete="tel" aria-describedby="parentPhone-help">
+        <p id="parentPhone-help" class="field-help">Phone number(s) organizers can reach in an emergency.</p>
+      </div>
+
+      <div class="notice notice-info">
+        <p><strong>Youth 13 and older</strong> must register individually using their own email address.</p>
+      </div>
+    </fieldset>
+
+    <!-- Accommodation -->
+    <fieldset>
+      <legend>Accommodation</legend>
+      <p>General camping is included in your registration. Other options are available for a separate fee — we'll connect you with Rhizome Springs to arrange payment and details. <a href="/site-info/#accommodations" target="_blank" rel="noopener">Learn more about each option.</a></p>
+
+      <label class="radio-label">
+        <input type="radio" name="accommodation" value="camping" checked>
+        <span><strong>General camping</strong> — tent or car camping (included)</span>
+      </label>
+      <label class="radio-label">
+        <input type="radio" name="accommodation" value="kdol-single">
+        <span><strong>KDOL cabin — single</strong> — CAD $75/night, 10-min forest walk from site</span>
+      </label>
+      <label class="radio-label">
+        <input type="radio" name="accommodation" value="kdol-double">
+        <span><strong>KDOL cabin — two people</strong> — CAD $95/night, 2 single beds, 10-min forest walk from site</span>
+      </label>
+      <label class="radio-label">
+        <input type="radio" name="accommodation" value="preset-tent">
+        <span><strong>Pre-set tent (on-site)</strong> — CAD $65/night, mattress &amp; bedding included</span>
+      </label>
+      <label class="radio-label">
+        <input type="radio" name="accommodation" value="geodesic-dome">
+        <span><strong>Geodesic dome</strong> — CAD $120/night, queen bed, private shower</span>
+      </label>
+
+      <p class="field-help">Non-camping accommodations must be reserved in advance directly with Rhizome Springs. We'll forward your preference to them after your application is accepted.</p>
+    </fieldset>
+
+    <!-- Additional notes -->
+    <fieldset>
+      <legend>Additional information</legend>
+
+      <div class="field">
+        <label for="dietaryNotes">Dietary needs (optional)</label>
+        <textarea id="dietaryNotes" name="dietaryNotes" maxlength="500" rows="3"
+                  aria-describedby="dietary-help"></textarea>
+        <p id="dietary-help" class="field-help">Allergies, restrictions, or preferences. Max 500 characters.</p>
+      </div>
+
+      <div class="field">
+        <label for="accessibilityNotes">Accessibility needs (optional)</label>
+        <textarea id="accessibilityNotes" name="accessibilityNotes" maxlength="500" rows="3"
+                  aria-describedby="access-help"></textarea>
+        <p id="access-help" class="field-help">Let us know how we can support you. Max 500 characters.</p>
+      </div>
+
+      <div class="field">
+        <label for="howDidYouHear">How did you hear about Kin-Fusion? (optional)</label>
+        <input type="text" id="howDidYouHear" name="howDidYouHear" maxlength="200">
+      </div>
+    </fieldset>
+
+    <!-- Privacy notice (ADR R8.1, R8.2) -->
+    <div class="privacy-notice" role="note" aria-label="Privacy notice">
+      <h2>Privacy notice</h2>
+      <p>We collect your name, email, pronouns, and logistical information to process your application for Kin-Fusion Campout 2026. This information is shared only with the event organizing team and stored in a Google Sheet accessible to organizers. <strong>Personal data will be deleted by December&nbsp;12,&nbsp;2026</strong> (90 days after the event ends). To request early deletion or a copy of your data, email <a href="mailto:{{ site.email }}">{{ site.email }}</a>.</p>
+    </div>
+
+    <!-- Photo/video consent (ADR R4.8, R8.4) -->
+    <div class="field consent-field">
+      <label class="checkbox-label" id="photoConsent-label">
+        <input type="checkbox" name="photoConsent" id="photoConsent"
+               aria-describedby="photoConsent-help">
+        <span>I consent to being photographed and/or video-recorded at Kin-Fusion Campout 2026, and to these images being used on the event website and social media.</span>
+      </label>
+      <p id="photoConsent-help" class="field-help">Optional — attending without consenting to photography is completely fine.</p>
+    </div>
+
+    <!-- Code of Conduct (ADR R4.9) -->
+    <div class="field consent-field">
+      <label class="checkbox-label">
+        <input type="checkbox" name="codeOfConductAccepted" id="codeOfConductAccepted"
+               required aria-required="true" aria-describedby="coc-help">
+        <span>I have read and accept the <a href="/code-of-conduct/" target="_blank" rel="noopener">Kin-Fusion Code of Conduct</a>. <span aria-hidden="true">*</span></span>
+      </label>
+      <p id="coc-help" class="field-help">Required to attend.</p>
+    </div>
+
+    <!-- Turnstile security challenge (ADR R4.2) -->
+    <div class="turnstile-container">
+      <div class="cf-turnstile"
+           data-sitekey="{{ site.turnstileSitekeyStaging if env == 'preview' else site.turnstileSitekey }}"
+           data-callback="turnstileCallback"
+           aria-label="Security challenge"></div>
+      <p id="turnstile-fallback" hidden>
+        Unable to load the security check. Please <a href="mailto:{{ site.email }}">email us</a> to register instead.
+      </p>
+    </div>
+
+    <!-- Status/error announcement region (a11y: aria-live) -->
+    <div id="form-status" role="alert" aria-live="polite" class="form-status"></div>
+
+    <button type="submit" id="submit-btn" class="btn btn-primary">Submit application</button>
+  </form>
+</div>
+
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<script type="module" src="/js/register.js"></script>

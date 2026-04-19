@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if title %}{{ title }} | {% endif %}Kin-Fusion Campout</title>
+    {% if description %}<meta name="description" content="{{ description }}">{% endif %}
+    <link rel="stylesheet" href="/css/main.css">
+  </head>
+  <body>
+    <a href="#main-content" class="skip-nav">Skip to main content</a>
+    {% include "nav.njk" %}
+    <main id="main-content">
+      {{ content | safe }}
+    </main>
+    {% include "footer.njk" %}
+  </body>
+</html>

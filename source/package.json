@@ -1,0 +1,31 @@
+{
+  "name": "kinfusion-website",
+  "version": "1.0.0",
+  "description": "Kin-Fusion Campout website — Eleventy 3.1 static site with Cloudflare Worker",
+  "type": "module",
+  "scripts": {
+    "build": "eleventy",
+    "start": "eleventy --serve",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [],
+  "author": "Liam Helmer",
+  "license": "ISC",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "eleventy-freeze-note": "ADR R2.1: after 2026-08-01, @11ty/eleventy major/minor upgrades MUST NOT be applied until after 2026-09-14 (post-event). Patch upgrades within 3.1.x are permitted.",
+  "dependencies": {
+    "@11ty/eleventy": "3.1.5",
+    "@11ty/eleventy-img": "6.0.0"
+  },
+  "devDependencies": {
+    "@axe-core/cli": "^4.11.2",
+    "@cloudflare/vitest-pool-workers": "^0.5.41",
+    "@lhci/cli": "^0.15.1",
+    "@playwright/test": "^1.59.1",
+    "http-server": "^14.1.1",
+    "vitest": "^2.1.9"
+  }
+}

@@ -258,3 +258,14 @@ After synthesis, the star-chamber reviewed the architecture across soundness, ve
 Rejected findings: migrating to Worker → Sheets API with Durable Object (violates organizer-editability constraint); hybrid Worker-queue → Apps Script async consumer (overbuilt for 90 attendees); Resend transactional email (user chose all-Google).
 
 Versioning recommendations (Node 22 LTS, Eleventy 3.1, Wrangler 4, eleventy-img 6) confirmed sensible by the council. Test suite (Lighthouse CI + axe + Playwright + Worker unit tests with miniflare) endorsed as realistic at this scale.
+
+## Consequences — Observed
+
+Deviations and surprises noted after implementation (appended 2026-04-19):
+
+- **Beads prefix:** The task tracker uses prefix `kf-` (not the slug `kinfusion-website-`). All beads references in this ADR and the plan use `kf-XXXX`.
+- **HEIC conversion tool:** On Linux, `heif-convert` (from `libheif-examples`) was used rather than `sips` (macOS-only). Both are documented in `CONTRIBUTING.md`.
+- **Star-chamber review added 8 requirements:** The star-chamber pass added `POST /api/form-token` (R4.4), explicit environment bootstrap task (T-2.0), staging-first ordering, Apps Script gateway/handlers split (T-2.8a/b), shared `form-handler.js` extraction (T-2.10), explicit retention implementation (T-3.5), production deploy parity (R1.2 moved to Phase 1), and server-side length validation (R7.3). These are all reflected in the plan and requirements above.
+- **production.yml deploy bug:** The production workflow silently skipped every deploy due to a conditional on `env.CF_API_TOKEN` that was always falsy at the `if:` evaluation level (GitHub Actions `env` context is not available in job-level `if:` conditions). Fixed in Phase 3 hardening (commit 7537435).
+- **`Code.js` stub:** Apps Script projects require a `Code.js` entry file. A stub was committed alongside the modular `gateway.js` and `handlers/` files; the gateway handles all actual dispatch.
+- **Email deliverability:** Not confirmed against a live inbox during development. Must be verified in T-3.6 pre-launch drill before declaring email path production-ready.

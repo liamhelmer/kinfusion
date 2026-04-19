@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Application Received — Kin-Fusion Campout 2026</title></head>
+<body style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h1 style="color: #2d6a4f;">Application received!</h1>
+  <p>Hi <?= name ?>,</p>
+  <p>Your application for <strong>Kin-Fusion Campout 2026</strong> (September 11&ndash;13, Rhizome Springs, Salt Spring Island) has been received.</p>
+  <p style="font-size: 1.1em;"><strong>Your reference code:</strong><br>
+    <span style="font-family: monospace; font-size: 1.4em; color: #1b4332; background: #f0faf5; padding: 4px 8px; border-radius: 4px;"><?= refCode ?></span>
+  </p>
+
+  <div style="background: #fff3cd; border-left: 4px solid #e76f51; padding: 15px; margin: 20px 0; border-radius: 4px;">
+    <p style="margin: 0;"><strong>This is an application, not a confirmed spot.</strong> We must receive your payment before you are registered. If you have any concerns about this or need accommodations, please <a href="mailto:kinfusion.campout@gmail.com">reach out directly</a>.</p>
+  </div>
+
+  <h2 style="color: #2d6a4f;">Payment summary</h2>
+  <p>Once your application is accepted, send this amount using one of the payment methods below.</p>
+
+  <table style="width:100%; border-collapse:collapse; margin:15px 0;">
+    <tbody>
+      <tr style="border-bottom:1px solid #eee;">
+        <td style="padding:8px 4px;">Registration &mdash; <?= tierLabel ?></td>
+        <td style="padding:8px 4px; text-align:right; white-space:nowrap;">CAD $<?= tier.toFixed(2) ?></td>
+      </tr>
+      <?  if (accommodationCost > 0) { ?>
+      <tr style="border-bottom:1px solid #eee;">
+        <td style="padding:8px 4px;"><?= accommodationLabel ?> &times; <?= nights ?> night<?= nights !== 1 ? 's' : '' ?></td>
+        <td style="padding:8px 4px; text-align:right; white-space:nowrap;">CAD $<?= accommodationCost.toFixed(2) ?></td>
+      </tr>
+      <?  } ?>
+      <tr style="border-bottom:1px solid #eee;">
+        <td style="padding:8px 4px;">Subtotal</td>
+        <td style="padding:8px 4px; text-align:right; white-space:nowrap;">CAD $<?= subtotal.toFixed(2) ?></td>
+      </tr>
+      <tr style="border-bottom:1px solid #eee;">
+        <td style="padding:8px 4px;">GST (5%)</td>
+        <td style="padding:8px 4px; text-align:right; white-space:nowrap;">CAD $<?= gst.toFixed(2) ?></td>
+      </tr>
+      <tr style="background:#f0faf5;">
+        <td style="padding:10px 4px;"><strong>Total</strong></td>
+        <td style="padding:10px 4px; text-align:right; white-space:nowrap;"><strong>CAD $<?= total.toFixed(2) ?></strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2 style="color: #2d6a4f;">What&rsquo;s included</h2>
+  <ul>
+    <li><?= accommodationLabel ?><? if (accommodation !== 'camping') { ?> (<?= nights ?> night<?= nights !== 1 ? 's' : '' ?>)<? } ?></li>
+    <li>3 meals per day (breakfast, lunch, and dinner) on Friday, Saturday, and Sunday</li>
+    <li>No meals on Thursday or Monday</li>
+    <li>Nightly dances</li>
+  </ul>
+  <? if (accommodation !== 'camping') { ?>
+  <p style="color:#666; font-size:0.9em;">Your accommodation preference has been noted. We&rsquo;ll connect you with Rhizome Springs to confirm and arrange payment for accommodations separately.</p>
+  <? } ?>
+
+  <h2 style="color: #2d6a4f;">How to pay</h2>
+  <p>Include your reference code <strong><?= refCode ?></strong> in the message.</p>
+
+  <h3 style="color: #2d6a4f;">Canadian residents &mdash; Interac e-Transfer</h3>
+  <p>
+    Send to: <strong>info@rhizomesprings.com</strong><br>
+    Password: <strong>RHIZOME</strong><br>
+    Amount: <strong>CAD $<?= total.toFixed(2) ?></strong>
+  </p>
+
+  <h3 style="color: #2d6a4f;">US / International &mdash; Wise</h3>
+  <p>Pay via Wise: <a href="https://wise.com/pay/me/selenal40">wise.com/pay/me/selenal40</a></p>
+
+  <h2 style="color: #2d6a4f;">Practical information</h2>
+  <p>Directions, ferry schedules, what to bring, and on-site facilities:<br>
+  <a href="https://kinfusion.dance/site-info/">kinfusion.dance/site-info/</a></p>
+
+  <p>Questions? Reply to this email or write to <a href="mailto:hello@kinfusion.dance">hello@kinfusion.dance</a>.</p>
+
+  <hr style="border:1px solid #eee; margin:30px 0;">
+  <p style="color:#888; font-size:0.85em;">
+    <strong>Privacy:</strong> Your data is stored securely in a Google Sheet accessible only to organizers.
+    It will be deleted by December&nbsp;12,&nbsp;2026 (90 days after the event).
+    To request early deletion, email <a href="mailto:hello@kinfusion.dance">hello@kinfusion.dance</a>.
+  </p>
+  <p style="color:#888; font-size:0.85em;">Kin-Fusion Campout &bull; September 11&ndash;13, 2026 &bull; Rhizome Springs, Salt Spring Island BC</p>
+</body>
+</html>

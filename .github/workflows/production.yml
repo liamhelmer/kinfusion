@@ -1,0 +1,66 @@
+name: Production Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: source
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: source/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build site
+        run: npm run build
+
+      - name: Run unit tests
+        run: npm test
+
+      # ADR R10.1: Playwright E2E golden path MUST pass before every production deploy.
+      # PLAYWRIGHT_BASE_URL must point to the staging preview Worker.
+      # If absent, the deploy is blocked with a clear error.
+      - name: Playwright E2E tests (required for production deploy)
+        run: |
+          if [ -z "$PLAYWRIGHT_BASE_URL" ]; then
+            echo "ERROR: PLAYWRIGHT_BASE_URL secret is not set."
+            echo "Add PLAYWRIGHT_BASE_URL as a GitHub Actions secret pointing to the staging preview URL."
+            echo "Production deploy blocked until E2E tests can run (ADR R10.1)."
+            exit 1
+          fi
+          npx playwright test
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ secrets.PLAYWRIGHT_BASE_URL }}
+
+      - name: Deploy to Cloudflare Workers (production)
+        if: ${{ secrets.CF_API_TOKEN != '' }}
+        run: npx wrangler deploy --env production
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+
+      - name: Skip deploy (not yet configured)
+        if: ${{ secrets.CF_API_TOKEN == '' }}
+        run: |
+          echo "Production deploy skipped."
+          echo "Reason: CF_API_TOKEN not set, or production Cloudflare project not yet bound (pending T-3.6)."
+          echo "Build and E2E tests completed -- set CF_API_TOKEN and CF_ACCOUNT_ID to enable production deploys."

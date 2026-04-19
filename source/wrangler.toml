@@ -1,0 +1,32 @@
+name = "kinfusion-website"
+main = "worker/index.js"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "./_site"
+binding = "ASSETS"
+
+[[kv_namespaces]]
+binding = "RATE_KV"
+id = "7cc76816d9cb445eb2075064a1cdffb1"
+preview_id = "189c1708731a48ae86e6048bbba8557f"
+
+[build]
+command = "ELEVENTY_ENV=${ELEVENTY_ENV:-preview} npm run build"
+
+[env.preview]
+name = "kinfusion-website-preview"
+# Secrets via: wrangler secret put <NAME> --env preview
+
+[[env.preview.kv_namespaces]]
+binding = "RATE_KV"
+id = "189c1708731a48ae86e6048bbba8557f"
+
+[env.production]
+name = "kinfusion-website"
+# Secrets via: wrangler secret put <NAME> --env production
+
+[[env.production.kv_namespaces]]
+binding = "RATE_KV"
+id = "7cc76816d9cb445eb2075064a1cdffb1"
