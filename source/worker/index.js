@@ -1,41 +1,62 @@
-const SECURITY_HEADERS = {
-  "X-Content-Type-Options": "nosniff",
-  "X-Frame-Options": "DENY",
-  "Referrer-Policy": "strict-origin-when-cross-origin",
-  "Content-Security-Policy": "default-src 'self'; img-src 'self' data:; style-src 'self'",
-};
+import { addSecurityHeaders } from './headers.js';
 
-function withSecurityHeaders(response) {
-  const patched = new Response(response.body, response);
-  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
-    patched.headers.set(key, value);
-  }
-  return patched;
+function jsonResponse(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
 }
+
+// Stub handlers — replaced by real implementations in T-2.4 through T-2.7
+async function handleFormToken(request, env) {
+  return jsonResponse({ ok: true });
+}
+
+async function handleRegister(request, env) {
+  return jsonResponse({ ok: true });
+}
+
+async function handleUnconference(request, env) {
+  return jsonResponse({ ok: true });
+}
+
+async function handleDJSignup(request, env) {
+  return jsonResponse({ ok: true });
+}
+
+const API_ROUTES = new Map([
+  ['POST /api/form-token', handleFormToken],
+  ['POST /api/register', handleRegister],
+  ['POST /api/unconference', handleUnconference],
+  ['POST /api/dj-signup', handleDJSignup],
+]);
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    // Route /api/* to Worker handlers (Phase 2)
-    if (url.pathname.startsWith("/api/")) {
-      return new Response(JSON.stringify({ ok: false, error: "Not implemented" }), {
-        status: 404,
-        headers: { "Content-Type": "application/json" },
-      });
+    if (url.pathname.startsWith('/api/')) {
+      const routeKey = `${request.method} ${url.pathname}`;
+      const handler = API_ROUTES.get(routeKey);
+      if (handler) {
+        return addSecurityHeaders(await handler(request, env));
+      }
+      if (request.method !== 'GET' && request.method !== 'HEAD') {
+        return addSecurityHeaders(jsonResponse({ ok: false, error: 'Not found', code: 'NOT_FOUND' }, 404));
+      }
+      return addSecurityHeaders(jsonResponse({ ok: false, error: 'Method not allowed', code: 'METHOD_NOT_ALLOWED' }, 405));
     }
 
-    // Serve static assets; on 404 serve the 404 page if available
     const response = await env.ASSETS.fetch(request);
     if (response.status === 404) {
-      const notFoundResponse = await env.ASSETS.fetch(new Request(new URL("/404.html", request.url)));
+      const notFoundResponse = await env.ASSETS.fetch(new Request(new URL('/404.html', request.url)));
       if (notFoundResponse.ok) {
-        return withSecurityHeaders(new Response(notFoundResponse.body, {
+        return addSecurityHeaders(new Response(notFoundResponse.body, {
           status: 404,
           headers: notFoundResponse.headers,
         }));
       }
     }
-    return withSecurityHeaders(response);
+    return addSecurityHeaders(response);
   },
 };
