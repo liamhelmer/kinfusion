@@ -1,0 +1,18 @@
+{
+  "name": "kinfusion-website",
+  "version": "1.0.0",
+  "description": "Kin-Fusion Campout website — Eleventy 3.1 static site with Cloudflare Worker",
+  "type": "module",
+  "scripts": {
+    "build": "eleventy",
+    "start": "eleventy --serve",
+    "test": "echo 'No tests in phase 1' && exit 0"
+  },
+  "keywords": [],
+  "author": "Liam Helmer",
+  "license": "ISC",
+  "dependencies": {
+    "@11ty/eleventy": "3.1.5",
+    "@11ty/eleventy-img": "6.0.0"
+  }
+}
