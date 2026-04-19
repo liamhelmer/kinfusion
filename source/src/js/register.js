@@ -176,7 +176,9 @@ const hasChildrenCheckbox = document.getElementById('hasChildrenCheckbox');
 const childrenField = document.getElementById('childrenField');
 hasChildrenCheckbox.addEventListener('change', () => {
   childrenField.hidden = !hasChildrenCheckbox.checked;
-  if (!hasChildrenCheckbox.checked) {
+  if (hasChildrenCheckbox.checked) {
+    addChild();
+  } else {
     childrenList.querySelectorAll('.child-row').forEach(r => r.remove());
     updateParentPhoneVisibility();
   }
@@ -209,6 +211,7 @@ initForm(form, {
     const fullName = form.querySelector('#fullName')?.value || '';
     const firstName = fullName.split(' ')[0];
     const div = buildConfirmation(refCode, firstName, tier, accommodation, arrivalDay, leavingDay);
+    document.getElementById('register-intro')?.remove();
     form.replaceWith(div);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   },
