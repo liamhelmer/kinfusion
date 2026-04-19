@@ -77,7 +77,7 @@ function buildConfirmation(refCode, name, tier, accommodation, arrivalDay, leavi
     <p><strong>Reference code:</strong> <code>${esc(refCode)}</code></p>
 
     <div class="notice">
-      <p><strong>This is an application, not a confirmed spot.</strong> Organizers will review applications and reach out. Please wait for an acceptance email before sending payment.</p>
+      <p><strong>This is an application, not a confirmed spot.</strong> We must receive your payment before you are registered. If you have any concerns about this or need accommodations, please <a href="mailto:kinfusion.campout@gmail.com">reach out directly</a>.</p>
     </div>
 
     <h2>Payment summary</h2>
