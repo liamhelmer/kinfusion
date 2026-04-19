@@ -141,9 +141,14 @@ as `turnstileSitekeyStaging`) — it always passes without showing a challenge.
 openssl rand -hex 32
 # Save the output — you'll need it for both Worker and Apps Script Script Properties
 
-# Set the Worker secret
+# Set the Worker secrets
 wrangler secret put APPS_SCRIPT_HMAC_KEY
 # Paste the generated hex string when prompted
+
+# Generate a separate form token signing key (recommended — avoids key reuse)
+openssl rand -hex 32
+wrangler secret put FORM_TOKEN_SECRET
+# Paste the new hex string when prompted
 ```
 
 ### Step 4: Bootstrap Apps Script (placeholder)
@@ -164,7 +169,7 @@ wrangler secret put APPS_SCRIPT_URL --env preview
 
 ```bash
 wrangler secret list
-# Should show: TURNSTILE_SECRET, APPS_SCRIPT_URL, APPS_SCRIPT_HMAC_KEY
+# Should show: TURNSTILE_SECRET, APPS_SCRIPT_URL, APPS_SCRIPT_HMAC_KEY, FORM_TOKEN_SECRET
 # Values are hidden — only names are shown
 ```
 

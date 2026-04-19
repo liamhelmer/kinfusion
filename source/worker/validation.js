@@ -1,6 +1,8 @@
 // ADR R7.3: server-side max-length and type validation for all three forms.
 
 const VALID_TIERS = new Set(['300', '350', '400']);
+const VALID_ARRIVAL_DAYS = new Set(['thursday', 'friday', 'saturday']);
+const VALID_DURATIONS = new Set(['30', '60', '90']);
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function checkLength(value, max, field) {
@@ -26,6 +28,7 @@ export function validateRegistration(body) {
     checkRequired(body.tier, 'tier'),
     VALID_TIERS.has(String(body.tier)) ? null : { valid: false, field: 'tier', code: 'VALIDATION' },
     checkRequired(body.arrivalDay, 'arrivalDay'),
+    VALID_ARRIVAL_DAYS.has(String(body.arrivalDay)) ? null : { valid: false, field: 'arrivalDay', code: 'VALIDATION' },
     body.codeOfConductAccepted === true ? null : { valid: false, field: 'codeOfConductAccepted', code: 'VALIDATION' },
     checkLength(body.pronouns, 100, 'pronouns'),
     checkLength(body.scholarshipNote, 500, 'scholarshipNote'),
@@ -58,6 +61,7 @@ export function validateUnconference(body) {
     checkRequired(body.description, 'description'),
     checkLength(body.description, 500, 'description'),
     checkRequired(body.duration, 'duration'),
+    VALID_DURATIONS.has(String(body.duration)) ? null : { valid: false, field: 'duration', code: 'VALIDATION' },
     checkLength(body.notes, 500, 'notes'),
   ];
   for (const result of checks) {
@@ -81,6 +85,10 @@ export function validateDJ(body) {
   ];
   for (const result of checks) {
     if (result) return result;
+  }
+  const setLen = parseInt(body.setLengthMin, 10);
+  if (isNaN(setLen) || setLen < 15 || setLen > 240) {
+    return { valid: false, field: 'setLengthMin', code: 'VALIDATION' };
   }
   return { valid: true };
 }

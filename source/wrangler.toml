@@ -17,9 +17,13 @@ command = "npm run build"
 
 [env.preview]
 name = "kinfusion-website-preview"
-# APPS_SCRIPT_URL secret must be set via: wrangler secret put APPS_SCRIPT_URL --env preview
-# Real URL set after T-2.1 (staging Apps Script deployed by human)
+# Secrets via: wrangler secret put <NAME> --env preview
+# APPS_SCRIPT_URL — set after T-2.1 (staging Apps Script deployed)
+# APPS_SCRIPT_HMAC_KEY — shared HMAC key with Apps Script
+# FORM_TOKEN_SECRET — separate key for form token signing (if omitted, falls back to APPS_SCRIPT_HMAC_KEY)
+# TURNSTILE_SECRET — Cloudflare Turnstile secret key
 
 [env.production]
 name = "kinfusion-website"
-# All production secrets set via wrangler secret put ... --env production
+# Secrets via: wrangler secret put <NAME> --env production
+# APPS_SCRIPT_URL, APPS_SCRIPT_HMAC_KEY, FORM_TOKEN_SECRET, TURNSTILE_SECRET

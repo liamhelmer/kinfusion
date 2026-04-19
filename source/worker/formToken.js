@@ -15,7 +15,8 @@ async function computeHmac(message, key) {
 export async function issueToken(env) {
   const timestamp = Date.now().toString();
   const nonce = crypto.randomUUID().replace(/-/g, '').slice(0, 16);
-  const hmac = await computeHmac(timestamp + ':' + nonce, env.APPS_SCRIPT_HMAC_KEY);
+  const key = env.FORM_TOKEN_SECRET || env.APPS_SCRIPT_HMAC_KEY;
+  const hmac = await computeHmac(timestamp + ':' + nonce, key);
   const token = `${timestamp}.${nonce}.${hmac}`;
   await env.RATE_KV.put(`ft:${token}`, '1', { expirationTtl: 1800 });
   return token;
