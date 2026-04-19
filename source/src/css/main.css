@@ -189,41 +189,44 @@ nav[aria-label="Main navigation"] {
   color: var(--color-text-light);
 }
 
-/* Nav toggle button (mobile) — hidden on desktop via JS in Phase 2; functional without JS */
-.nav-toggle {
-  display: none;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: var(--space-xs);
-  flex-direction: column;
-  gap: 4px;
+/* Mobile nav — CSS-only disclosure pattern via <details>/<summary>, zero JS required */
+.nav-mobile {
+  display: contents;
 }
 
-.nav-toggle-bar {
-  display: block;
-  width: 24px;
-  height: 2px;
-  background: var(--color-text-light);
-  border-radius: 2px;
+.nav-toggle {
+  display: none;
 }
 
 @media (max-width: 640px) {
+  .nav-inner {
+    flex-wrap: wrap;
+  }
+
+  .nav-mobile {
+    display: block;
+  }
+
   .nav-toggle {
-    display: flex;
+    display: list-item;
+    cursor: pointer;
+    color: var(--color-accent-bright);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: var(--space-xs) var(--space-sm);
+    list-style: none;
+    user-select: none;
+  }
+
+  .nav-toggle::-webkit-details-marker {
+    display: none;
   }
 
   .nav-menu {
     width: 100%;
     flex-direction: column;
     align-items: flex-start;
-    display: none;
-  }
-
-  /* Without JS, show menu on focus within */
-  .nav-toggle:focus + .nav-menu,
-  .nav-menu:focus-within {
-    display: flex;
   }
 }
 

@@ -1,5 +1,5 @@
 export default {
-  async fetch(request, env, ctx) {
+  async fetch(request, env) {
     const url = new URL(request.url);
 
     // Route /api/* to Worker handlers (Phase 2)
@@ -10,7 +10,17 @@ export default {
       });
     }
 
-    // Serve all other paths from static assets
-    return env.ASSETS.fetch(request);
+    // Serve static assets; on 404 serve the 404 page if available
+    const response = await env.ASSETS.fetch(request);
+    if (response.status === 404) {
+      const notFoundResponse = await env.ASSETS.fetch(new Request(new URL("/404.html", request.url)));
+      if (notFoundResponse.ok) {
+        return new Response(notFoundResponse.body, {
+          status: 404,
+          headers: notFoundResponse.headers,
+        });
+      }
+    }
+    return response;
   },
 };

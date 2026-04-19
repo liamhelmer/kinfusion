@@ -27,14 +27,15 @@ async function imageShortcode(src, alt, options = {}) {
 }
 
 export default function (eleventyConfig) {
-  // 12 MB source image guard — runs before every build
+  // 12 MB source image guard — runs before every build; scans recursively
   eleventyConfig.on("eleventy.before", async () => {
     const assetsDir = "src/assets";
     if (!fs.existsSync(assetsDir)) return;
-    const files = fs.readdirSync(assetsDir);
+    const files = fs.readdirSync(assetsDir, { recursive: true });
     for (const file of files) {
       const filePath = path.join(assetsDir, file);
       const stat = fs.statSync(filePath);
+      if (!stat.isFile()) continue;
       const mb = stat.size / (1024 * 1024);
       if (mb > 12) {
         throw new Error(
