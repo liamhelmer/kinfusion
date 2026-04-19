@@ -1,0 +1,50 @@
+name: Production Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: source
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: source/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build site
+        run: npm run build
+
+      - name: Deploy to Cloudflare Workers (production)
+        if: ${{ env.CF_API_TOKEN != '' }}
+        run: npx wrangler deploy --env production
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+
+      - name: Skip deploy (not yet configured)
+        if: ${{ env.CF_API_TOKEN == '' }}
+        run: |
+          echo "Production deploy skipped."
+          echo "Reason: CF_API_TOKEN not set, or production Cloudflare project not yet bound (pending T-3.6)."
+          echo "Build completed successfully — set CF_API_TOKEN and CF_ACCOUNT_ID as repository secrets to enable production deploys."
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}

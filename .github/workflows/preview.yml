@@ -1,0 +1,46 @@
+name: Preview Deploy
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: source
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: source/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build site
+        run: npm run build
+
+      - name: Deploy to Cloudflare Workers (preview)
+        if: ${{ env.CF_API_TOKEN != '' }}
+        run: npx wrangler deploy --env preview
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+
+      - name: Skip deploy (secrets not configured)
+        if: ${{ env.CF_API_TOKEN == '' }}
+        run: |
+          echo "CF_API_TOKEN not set in GitHub Actions secrets."
+          echo "To enable preview deploys: add CF_API_TOKEN and CF_ACCOUNT_ID as repository secrets."
+          echo "Build completed successfully — only the Cloudflare deploy step was skipped."
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
