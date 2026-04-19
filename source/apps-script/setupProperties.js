@@ -1,3 +1,16 @@
+// Run this from the editor to trigger MailApp authorization.
+// If a permissions dialog appears, click through and allow all scopes.
+// After it succeeds, form submission emails will work.
+function authorizeMailApp() {
+  var props = PropertiesService.getScriptProperties();
+  var to = props.getProperty('ORGANIZER_EMAIL') || props.getProperty('FROM_EMAIL');
+  if (!to) {
+    throw new Error('Run setupProperties() first so ORGANIZER_EMAIL is set.');
+  }
+  MailApp.sendEmail(to, 'Kin-Fusion Apps Script — mail auth test', 'Mail authorization is working.');
+  Logger.log('authorizeMailApp: test email sent to ' + to);
+}
+
 // One-shot setup function. Run once from the Apps Script editor to set script
 // properties and trigger OAuth authorization for all required scopes.
 // Safe to re-run — setProperties overwrites existing values.
