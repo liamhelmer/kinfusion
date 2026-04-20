@@ -1,20 +1,18 @@
 <nav aria-label="Main navigation">
   <div class="nav-inner">
     <a href="/" class="nav-logo">Kin-Fusion Campout</a>
-    <details class="nav-mobile">
-      <summary class="nav-toggle" aria-label="Navigation menu">Menu</summary>
-      <ul id="nav-menu" class="nav-menu" role="list">
-        <li><a href="/" {% if page.url == "/" %}aria-current="page"{% endif %}>Home</a></li>
-        <li><a href="/about/" {% if page.url == "/about/" %}aria-current="page"{% endif %}>About</a></li>
-        <li><a href="/location/" {% if page.url == "/location/" %}aria-current="page"{% endif %}>Location</a></li>
-        <li><a href="/site-info/" {% if page.url == "/site-info/" %}aria-current="page"{% endif %}>Site Info</a></li>
-        <li><a href="/schedule/" {% if page.url == "/schedule/" %}aria-current="page"{% endif %}>Schedule</a></li>
-        <li><a href="/register/" {% if page.url == "/register/" %}aria-current="page"{% endif %}>Register</a></li>
-        <li><a href="/unconference/" {% if page.url == "/unconference/" %}aria-current="page"{% endif %}>Unconference</a></li>
-        <li><a href="/dj/" {% if page.url == "/dj/" %}aria-current="page"{% endif %}>DJ Signup</a></li>
-        <li><a href="/code-of-conduct/" {% if page.url == "/code-of-conduct/" %}aria-current="page"{% endif %}>Code of Conduct</a></li>
-        <li><a href="/faq/" {% if page.url == "/faq/" %}aria-current="page"{% endif %}>FAQ</a></li>
-      </ul>
-    </details>
+    <button class="nav-toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="Open navigation menu">Menu</button>
+    <ul id="nav-menu" class="nav-menu" role="list">
+      <li><a href="/" {% if page.url == "/" %}aria-current="page"{% endif %}>Home</a></li>
+      <li><a href="/about/" {% if page.url == "/about/" %}aria-current="page"{% endif %}>About</a></li>
+      <li><a href="/location/" {% if page.url == "/location/" %}aria-current="page"{% endif %}>Location</a></li>
+      <li><a href="/site-info/" {% if page.url == "/site-info/" %}aria-current="page"{% endif %}>Site Info</a></li>
+      <li><a href="/schedule/" {% if page.url == "/schedule/" %}aria-current="page"{% endif %}>Schedule</a></li>
+      <li><a href="/register/" {% if page.url == "/register/" %}aria-current="page"{% endif %}>Register</a></li>
+      <li><a href="/unconference/" {% if page.url == "/unconference/" %}aria-current="page"{% endif %}>Unconference</a></li>
+      <li><a href="/dj/" {% if page.url == "/dj/" %}aria-current="page"{% endif %}>DJ Signup</a></li>
+      <li><a href="/code-of-conduct/" {% if page.url == "/code-of-conduct/" %}aria-current="page"{% endif %}>Code of Conduct</a></li>
+      <li><a href="/faq/" {% if page.url == "/faq/" %}aria-current="page"{% endif %}>FAQ</a></li>
+    </ul>
   </div>
 </nav>
