@@ -13,7 +13,7 @@ id = "7cc76816d9cb445eb2075064a1cdffb1"
 preview_id = "189c1708731a48ae86e6048bbba8557f"
 
 [build]
-command = "ELEVENTY_ENV=${ELEVENTY_ENV:-preview} npm run build"
+command = "ELEVENTY_ENV=${ELEVENTY_ENV:-production} npm run build"
 
 [env.preview]
 name = "kinfusion-website-preview"
