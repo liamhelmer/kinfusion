@@ -27,3 +27,55 @@ function setupProperties() {
   Logger.log('Script properties set.');
   return 'ok';
 }
+
+// Creates the required tabs with headers in the spreadsheet set by SHEET_ID.
+// Run once from the editor after pointing SHEET_ID at a new blank spreadsheet.
+// Safe to re-run — skips tabs that already exist.
+function setupSpreadsheet() {
+  var props = PropertiesService.getScriptProperties();
+  var sheetId = props.getProperty('SHEET_ID');
+  if (!sheetId) throw new Error('SHEET_ID not set. Run setupProperties() first.');
+
+  var ss = SpreadsheetApp.openById(sheetId);
+
+  var tabs = [
+    {
+      name: 'Registrations',
+      headers: [
+        'Timestamp', 'RefCode', 'FullName', 'Email', 'Pronouns',
+        'Tier', 'ScholarshipRequest', 'ScholarshipNote', 'Worktrade',
+        'ArrivalDay', 'LeavingDay', 'Accommodation', 'ChildrenCount',
+        'ParentPhone', 'DietaryNotes', 'AccessibilityNotes', 'HowDidYouHear',
+        'PhotoConsent', 'CodeOfConductAccepted', 'Status', 'PaymentStatus', 'Notes'
+      ]
+    },
+    {
+      name: 'DJSignups',
+      headers: [
+        'Timestamp', 'RefCode', 'DJName', 'RealName', 'Email',
+        'SetStyle', 'SetLengthMin', 'PreferredTime', 'GearNeeded', 'Links', 'Notes'
+      ]
+    },
+    {
+      name: 'UnconferenceProposals',
+      headers: [
+        'Timestamp', 'RefCode', 'ProposerName', 'Email',
+        'WorkshopTitle', 'Description', 'Duration', 'MaterialsNeeded', 'PreferredDay'
+      ]
+    }
+  ];
+
+  tabs.forEach(function (tab) {
+    var sheet = ss.getSheetByName(tab.name);
+    if (!sheet) {
+      sheet = ss.insertSheet(tab.name);
+      sheet.appendRow(tab.headers);
+      sheet.setFrozenRows(1);
+      Logger.log('Created tab: ' + tab.name);
+    } else {
+      Logger.log('Tab already exists, skipped: ' + tab.name);
+    }
+  });
+
+  return 'setupSpreadsheet complete';
+}
