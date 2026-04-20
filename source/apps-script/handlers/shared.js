@@ -39,6 +39,7 @@ function buildRegistrationEmailHtml(data) {
   template.accommodationCost = data.accommodationCost || 0;
   template.subtotal = data.subtotal || 0;
   template.gst = data.gst || 0;
+  template.donation = data.donation || 0;
   template.total = data.total || 0;
   return template.evaluate().getContent();
 }
