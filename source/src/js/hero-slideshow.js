@@ -1,4 +1,4 @@
-// Hero image slideshow — rotates every 90 seconds with a 2-second cross-fade.
+// Hero image slideshow — rotates every 60 seconds with a 2-second cross-fade.
 // No-op when fewer than 2 slides exist or when prefers-reduced-motion is set.
 (function () {
   const slides = document.querySelectorAll('.hero-slide');
@@ -10,5 +10,5 @@
     slides[current].classList.remove('is-active');
     current = (current + 1) % slides.length;
     slides[current].classList.add('is-active');
-  }, 90000);
+  }, 60000);
 }());
