@@ -36,6 +36,12 @@
         <td style="padding:8px 4px;">GST (5%)</td>
         <td style="padding:8px 4px; text-align:right; white-space:nowrap;">CAD $<?= gst.toFixed(2) ?></td>
       </tr>
+      <?  if (donation > 0) { ?>
+      <tr style="border-bottom:1px solid #eee;">
+        <td style="padding:8px 4px;">Donation <span style="color:#666;font-size:0.9em;">(no GST)</span></td>
+        <td style="padding:8px 4px; text-align:right; white-space:nowrap;">CAD $<?= donation.toFixed(2) ?></td>
+      </tr>
+      <?  } ?>
       <tr style="background:#f0faf5;">
         <td style="padding:10px 4px;"><strong>Total</strong></td>
         <td style="padding:10px 4px; text-align:right; white-space:nowrap;"><strong>CAD $<?= total.toFixed(2) ?></strong></td>

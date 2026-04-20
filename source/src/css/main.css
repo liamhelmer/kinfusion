@@ -564,6 +564,19 @@ form legend {
   margin: 0.25rem 0 0;
 }
 
+.input-currency {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.input-currency .currency-prefix {
+  font-weight: 500;
+  white-space: nowrap;
+}
+.input-currency input[type=number] {
+  width: 8rem;
+}
+
 .radio-label,
 .checkbox-label {
   display: flex;

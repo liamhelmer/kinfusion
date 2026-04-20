@@ -14,6 +14,7 @@ const ACCOMMODATION_RATES = {
   'kdol-double': 95,
   'preset-tent': 65,
   'geodesic-dome': 120,
+  rv: 0,
 };
 const ACCOMMODATION_LABELS = {
   camping: 'General camping',
@@ -21,6 +22,7 @@ const ACCOMMODATION_LABELS = {
   'kdol-double': 'KDOL cabin — two people',
   'preset-tent': 'Pre-set tent (on-site)',
   'geodesic-dome': 'Geodesic dome',
+  rv: 'Bringing an RV',
 };
 const TIER_LABELS = {
   300: 'Community/solidarity rate',
@@ -36,36 +38,46 @@ function fmtCad(n) {
   return 'CAD\u00a0$' + n.toFixed(2);
 }
 
-function calcPricing(tier, accommodation, arrivalDay, leavingDay) {
+function calcPricing(tier, accommodation, arrivalDay, leavingDay, donation) {
   const nights = LEAVING_DAY_NUMS[leavingDay] - ARRIVAL_DAY_NUMS[arrivalDay];
   const rate = ACCOMMODATION_RATES[accommodation] || 0;
   const accommodationCost = rate * nights;
   const subtotalCents = (tier + accommodationCost) * 100;
   const gstCents = Math.round(subtotalCents * 0.05);
+  const donationAmt = parseFloat(donation) || 0;
   return {
     nights,
     accommodationCost,
     subtotal: (tier + accommodationCost),
     gst: gstCents / 100,
-    total: (subtotalCents + gstCents) / 100,
+    donation: donationAmt,
+    total: (subtotalCents + gstCents) / 100 + donationAmt,
   };
 }
 
-function buildConfirmation(refCode, name, tier, accommodation, arrivalDay, leavingDay) {
-  const p = calcPricing(tier, accommodation, arrivalDay, leavingDay);
+function buildConfirmation(refCode, name, tier, accommodation, arrivalDay, leavingDay, donation, rvLength) {
+  const p = calcPricing(tier, accommodation, arrivalDay, leavingDay, donation);
   const accLabel = esc(ACCOMMODATION_LABELS[accommodation] || accommodation);
   const tierLabel = esc(TIER_LABELS[tier] || ('$' + tier));
-  const isCamping = accommodation === 'camping';
+  const isCamping = accommodation === 'camping' || accommodation === 'rv';
 
-  const accRow = isCamping ? '' : `
+  const accRow = (accommodation === 'rv' || accommodation === 'camping') ? '' : `
       <tr>
         <td>${accLabel} &times; ${p.nights} night${p.nights !== 1 ? 's' : ''}</td>
         <td>${fmtCad(p.accommodationCost)}</td>
       </tr>`;
 
-  const accIncluded = isCamping
-    ? 'General camping (tent or car)'
-    : `${accLabel} &times; ${p.nights} night${p.nights !== 1 ? 's' : ''}`;
+  const donationRow = p.donation > 0 ? `
+      <tr>
+        <td>Donation <span class="table-note">(no GST)</span></td>
+        <td>${fmtCad(p.donation)}</td>
+      </tr>` : '';
+
+  const accIncluded = accommodation === 'rv'
+    ? `Bringing an RV${rvLength ? ' (' + esc(rvLength) + '\u00a0ft)' : ''}`
+    : isCamping
+      ? 'General camping (tent or car)'
+      : `${accLabel} &times; ${p.nights} night${p.nights !== 1 ? 's' : ''}`;
 
   const accNote = isCamping ? '' : `
     <p class="field-help">Your accommodation preference has been noted. We'll connect you with Rhizome Springs to confirm and arrange payment.</p>`;
@@ -94,7 +106,7 @@ function buildConfirmation(refCode, name, tier, accommodation, arrivalDay, leavi
         <tr>
           <td>GST (5%)</td>
           <td>${fmtCad(p.gst)}</td>
-        </tr>
+        </tr>${donationRow}
         <tr class="total-row">
           <td><strong>Total</strong></td>
           <td><strong>${fmtCad(p.total)}</strong></td>
@@ -172,6 +184,20 @@ function addChild() {
 
 addChildBtn.addEventListener('click', addChild);
 
+const rvLengthField = document.getElementById('rvLengthField');
+const rvLengthInput = document.getElementById('rvLength');
+form.querySelectorAll('input[name="accommodation"]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    const isRv = radio.value === 'rv' && radio.checked;
+    rvLengthField.hidden = !isRv;
+    if (isRv) {
+      rvLengthInput.setAttribute('required', '');
+    } else {
+      rvLengthInput.removeAttribute('required');
+    }
+  });
+});
+
 const hasChildrenCheckbox = document.getElementById('hasChildrenCheckbox');
 const childrenField = document.getElementById('childrenField');
 hasChildrenCheckbox.addEventListener('change', () => {
@@ -201,6 +227,15 @@ initForm(form, {
       }
     }
     cleaned.children = children;
+    const donation = parseFloat(body.donation) || 0;
+    cleaned.donation = donation;
+    const acc = formEl.querySelector('input[name="accommodation"]:checked')?.value || 'camping';
+    if (acc === 'rv') {
+      const rvLen = parseInt(body.rvLength, 10);
+      cleaned.rvLength = isNaN(rvLen) ? 25 : rvLen;
+    } else {
+      delete cleaned.rvLength;
+    }
     return cleaned;
   },
   onSuccess: ({ refCode }) => {
@@ -210,7 +245,9 @@ initForm(form, {
     const leavingDay = form.querySelector('#leavingDay')?.value || 'sunday';
     const fullName = form.querySelector('#fullName')?.value || '';
     const firstName = fullName.split(' ')[0];
-    const div = buildConfirmation(refCode, firstName, tier, accommodation, arrivalDay, leavingDay);
+    const donation = parseFloat(form.querySelector('#donation')?.value) || 0;
+    const rvLength = accommodation === 'rv' ? (form.querySelector('#rvLength')?.value || '25') : null;
+    const div = buildConfirmation(refCode, firstName, tier, accommodation, arrivalDay, leavingDay, donation, rvLength);
     document.getElementById('register-intro')?.remove();
     form.replaceWith(div);
     window.scrollTo({ top: 0, behavior: 'smooth' });

@@ -46,7 +46,8 @@ function setupSpreadsheet() {
         'Tier', 'ScholarshipRequest', 'ScholarshipNote', 'Worktrade',
         'ArrivalDay', 'LeavingDay', 'Accommodation', 'ChildrenCount',
         'ParentPhone', 'DietaryNotes', 'AccessibilityNotes', 'HowDidYouHear',
-        'PhotoConsent', 'CodeOfConductAccepted', 'Status', 'PaymentStatus', 'Notes'
+        'PhotoConsent', 'CodeOfConductAccepted', 'Status', 'PaymentStatus', 'Notes',
+        'Donation', 'RVLength'
       ]
     },
     {

@@ -4,7 +4,7 @@ const VALID_TIERS = new Set(['300', '350', '400']);
 const VALID_ARRIVAL_DAYS = new Set(['thursday', 'friday', 'saturday']);
 const VALID_LEAVING_DAYS = new Set(['sunday', 'monday']);
 const VALID_DURATIONS = new Set(['30', '60', '90']);
-const VALID_ACCOMMODATIONS = new Set(['camping', 'kdol-single', 'kdol-double', 'preset-tent', 'geodesic-dome']);
+const VALID_ACCOMMODATIONS = new Set(['camping', 'kdol-single', 'kdol-double', 'preset-tent', 'geodesic-dome', 'rv']);
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function checkLength(value, max, field) {
@@ -44,6 +44,25 @@ export function validateRegistration(body) {
   ];
   for (const result of checks) {
     if (result) return result;
+  }
+
+  // Donation validation (optional, 0–9999)
+  if (body.donation !== undefined && body.donation !== null && body.donation !== '') {
+    const donationVal = parseFloat(body.donation);
+    if (isNaN(donationVal) || donationVal < 0 || donationVal > 9999) {
+      return { valid: false, field: 'donation', code: 'VALIDATION' };
+    }
+  }
+
+  // RV length validation (required when accommodation === 'rv')
+  if (body.accommodation === 'rv') {
+    if (body.rvLength === undefined || body.rvLength === null || body.rvLength === '') {
+      return { valid: false, field: 'rvLength', code: 'VALIDATION' };
+    }
+    const rvLen = parseInt(body.rvLength, 10);
+    if (isNaN(rvLen) || rvLen < 10 || rvLen > 100) {
+      return { valid: false, field: 'rvLength', code: 'VALIDATION' };
+    }
   }
 
   // Children validation

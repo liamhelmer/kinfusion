@@ -8,7 +8,7 @@
 var ARRIVAL_DAY_NUMS = { thursday: 0, friday: 1, saturday: 2 };
 var LEAVING_DAY_NUMS  = { sunday: 3, monday: 4 };
 var ACCOMMODATION_RATES = {
-  camping: 0, 'kdol-single': 75, 'kdol-double': 95, 'preset-tent': 65, 'geodesic-dome': 120
+  camping: 0, 'kdol-single': 75, 'kdol-double': 95, 'preset-tent': 65, 'geodesic-dome': 120, rv: 0
 };
 var ACCOMMODATION_LABELS = {
   camping: 'General camping',
@@ -16,6 +16,7 @@ var ACCOMMODATION_LABELS = {
   'kdol-double': 'KDOL cabin \u2014 two people',
   'preset-tent': 'Pre-set tent (on-site)',
   'geodesic-dome': 'Geodesic dome',
+  rv: 'RV',
 };
 var TIER_LABELS = { 300: 'Community/solidarity rate', 350: 'Standard rate', 400: 'Sustainer rate' };
 
@@ -29,6 +30,7 @@ function calcRegistrationPricing(payload) {
   var accommodationCost = rate * nights;
   var subtotalCents = (tier + accommodationCost) * 100;
   var gstCents = Math.round(subtotalCents * 0.05);
+  var donation = parseFloat(payload.donation) || 0;
   return {
     tier: tier,
     tierLabel: TIER_LABELS[tier] || ('$' + tier),
@@ -38,7 +40,8 @@ function calcRegistrationPricing(payload) {
     accommodationCost: accommodationCost,
     subtotal: (tier + accommodationCost),
     gst: gstCents / 100,
-    total: (subtotalCents + gstCents) / 100,
+    donation: donation,
+    total: (subtotalCents + gstCents) / 100 + donation,
   };
 }
 
@@ -63,7 +66,7 @@ function handleRegister(payload) {
     return { ok: false, code: 'SHEET_NOT_FOUND' };
   }
 
-  // ADR R7.2 column order (22 columns)
+  // Column order: 22 original + col 23 (Donation) + col 24 (RVLength)
   sheet.appendRow([
     timestamp,
     refCode,
@@ -86,7 +89,9 @@ function handleRegister(payload) {
     payload.codeOfConductAccepted === true || payload.codeOfConductAccepted === 'true',
     'pending-review',
     'unpaid',
-    ''
+    '',
+    pricing.donation || 0,
+    pricing.accommodation === 'rv' ? (parseInt(payload.rvLength) || 25) : ''
   ]);
 
   // Write each child to the Children tab
@@ -126,7 +131,7 @@ function handleRegister(payload) {
     '--- PAYMENT SUMMARY ---',
     'Registration (' + pricing.tierLabel + '): CAD $' + pricing.tier.toFixed(2),
     accLine + 'GST (5%): CAD $' + pricing.gst.toFixed(2),
-    'Total: CAD $' + pricing.total.toFixed(2),
+    (pricing.donation > 0 ? 'Donation (no GST): CAD $' + pricing.donation.toFixed(2) + '\n' : '') + 'Total: CAD $' + pricing.total.toFixed(2),
     '',
     '--- HOW TO PAY ---',
     'Canadian (Interac e-Transfer):',
@@ -163,6 +168,7 @@ function handleRegister(payload) {
     accommodationCost: pricing.accommodationCost,
     subtotal: pricing.subtotal,
     gst: pricing.gst,
+    donation: pricing.donation,
     total: pricing.total,
   };
 

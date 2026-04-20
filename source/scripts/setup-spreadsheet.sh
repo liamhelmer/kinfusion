@@ -81,8 +81,8 @@ echo "Created: https://docs.google.com/spreadsheets/d/$SHEET_ID/edit"
 echo "Writing headers..."
 
 gws sheets spreadsheets values update \
-  --params "{\"spreadsheetId\":\"$SHEET_ID\",\"range\":\"Registrations!A1:V1\",\"valueInputOption\":\"RAW\"}" \
-  --json '{"values":[["Timestamp","RefCode","FullName","Email","Pronouns","Tier","ScholarshipRequest","ScholarshipNote","Worktrade","ArrivalDay","LeavingDay","Accommodation","ChildrenCount","ParentPhone","DietaryNotes","AccessibilityNotes","HowDidYouHear","PhotoConsent","CodeOfConductAccepted","Status","PaymentStatus","Notes"]]}' \
+  --params "{\"spreadsheetId\":\"$SHEET_ID\",\"range\":\"Registrations!A1:X1\",\"valueInputOption\":\"RAW\"}" \
+  --json '{"values":[["Timestamp","RefCode","FullName","Email","Pronouns","Tier","ScholarshipRequest","ScholarshipNote","Worktrade","ArrivalDay","LeavingDay","Accommodation","ChildrenCount","ParentPhone","DietaryNotes","AccessibilityNotes","HowDidYouHear","PhotoConsent","CodeOfConductAccepted","Status","PaymentStatus","Notes","Donation","RVLength"]]}' \
   > /dev/null
 
 gws sheets spreadsheets values update \

@@ -78,6 +78,16 @@ description: "Apply to attend Kin-Fusion Campout 2026 — a fusion dance unconfe
       </label>
     </fieldset>
 
+    <!-- Donation -->
+    <div class="field">
+      <label for="donation">Optional donation <span class="field-help">(no GST charged)</span></label>
+      <p class="field-help">All proceeds go towards making the event better — scholarships, artists, and community support.</p>
+      <div class="input-currency">
+        <span class="currency-prefix">CAD $</span>
+        <input type="number" id="donation" name="donation" min="0" max="9999" step="1" value="0" autocomplete="off">
+      </div>
+    </div>
+
     <!-- Scholarship + Worktrade -->
     <div class="fieldset-pair">
       <fieldset>
@@ -178,6 +188,16 @@ description: "Apply to attend Kin-Fusion Campout 2026 — a fusion dance unconfe
         <input type="radio" name="accommodation" value="geodesic-dome">
         <span><strong>Geodesic dome</strong> — CAD $120/night, queen bed, private shower</span>
       </label>
+      <label class="radio-label">
+        <input type="radio" name="accommodation" value="rv">
+        <span><strong>I am bringing an RV</strong> — (included, no extra charge)</span>
+      </label>
+
+      <div class="field" id="rvLengthField" hidden>
+        <label for="rvLength">RV length (feet)</label>
+        <input type="number" id="rvLength" name="rvLength" min="10" max="100" value="25" autocomplete="off" aria-describedby="rvLength-help">
+        <p id="rvLength-help" class="field-help">Approximate length of your RV in feet.</p>
+      </div>
 
       <p class="field-help">Non-camping accommodations must be reserved in advance directly with Rhizome Springs. We'll forward your preference to them after your application is accepted.</p>
     </fieldset>
