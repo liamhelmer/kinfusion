@@ -83,9 +83,22 @@ function setupSpreadsheet() {
       sheet.appendRow(tab.headers);
       sheet.setFrozenRows(1);
       Logger.log('Created tab: ' + tab.name);
-    } else {
-      Logger.log('Tab already exists, skipped: ' + tab.name);
+      return;
     }
+
+    // Tab exists — append any new header columns beyond the current width.
+    var lastCol = sheet.getLastColumn();
+    var currentHeaders = lastCol > 0
+      ? sheet.getRange(1, 1, 1, lastCol).getValues()[0]
+      : [];
+    if (tab.headers.length > currentHeaders.length) {
+      var extraHeaders = tab.headers.slice(currentHeaders.length);
+      sheet.getRange(1, currentHeaders.length + 1, 1, extraHeaders.length).setValues([extraHeaders]);
+      Logger.log('Added ' + extraHeaders.length + ' column(s) to ' + tab.name + ': ' + extraHeaders.join(', '));
+    } else {
+      Logger.log('Tab already up-to-date: ' + tab.name);
+    }
+    if (sheet.getFrozenRows() < 1) sheet.setFrozenRows(1);
   });
 
   return 'setupSpreadsheet complete';
