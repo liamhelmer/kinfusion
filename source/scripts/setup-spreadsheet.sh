@@ -69,6 +69,7 @@ SHEET_ID=$(gws sheets spreadsheets create \
     \"properties\": { \"title\": \"$SHEET_TITLE\" },
     \"sheets\": [
       { \"properties\": { \"title\": \"Registrations\" } },
+      { \"properties\": { \"title\": \"Children\" } },
       { \"properties\": { \"title\": \"DJSignups\" } },
       { \"properties\": { \"title\": \"UnconferenceProposals\" } }
     ]
@@ -81,13 +82,18 @@ echo "Created: https://docs.google.com/spreadsheets/d/$SHEET_ID/edit"
 echo "Writing headers..."
 
 gws sheets spreadsheets values update \
-  --params "{\"spreadsheetId\":\"$SHEET_ID\",\"range\":\"Registrations!A1:X1\",\"valueInputOption\":\"RAW\"}" \
-  --json '{"values":[["Timestamp","RefCode","FullName","Email","Pronouns","Tier","ScholarshipRequest","ScholarshipNote","Worktrade","ArrivalDay","LeavingDay","Accommodation","ChildrenCount","ParentPhone","DietaryNotes","AccessibilityNotes","HowDidYouHear","PhotoConsent","CodeOfConductAccepted","Status","PaymentStatus","Notes","Donation","RVLength"]]}' \
+  --params "{\"spreadsheetId\":\"$SHEET_ID\",\"range\":\"Registrations!A1:AC1\",\"valueInputOption\":\"RAW\"}" \
+  --json '{"values":[["Timestamp","RefCode","FullName","Email","Pronouns","Tier","ScholarshipRequest","ScholarshipNote","Worktrade","ArrivalDay","LeavingDay","Accommodation","ChildrenCount","ParentPhone","DietaryNotes","AccessibilityNotes","HowDidYouHear","PhotoConsent","CodeOfConductAccepted","Status","PaymentStatus","Notes","Donation","RVLength","AdultAllergies","FridgeSpace","IsYouth13to18","GuardianNames","KidsAgreementsAccepted"]]}' \
   > /dev/null
 
 gws sheets spreadsheets values update \
-  --params "{\"spreadsheetId\":\"$SHEET_ID\",\"range\":\"DJSignups!A1:K1\",\"valueInputOption\":\"RAW\"}" \
-  --json '{"values":[["Timestamp","RefCode","DJName","RealName","Email","SetStyle","SetLengthMin","PreferredTime","GearNeeded","Links","Notes"]]}' \
+  --params "{\"spreadsheetId\":\"$SHEET_ID\",\"range\":\"Children!A1:K1\",\"valueInputOption\":\"RAW\"}" \
+  --json '{"values":[["Timestamp","ParentRefCode","ParentName","ParentEmail","ParentPhone","ChildName","ChildAge","ChildRelationship","ChildDietary","ChildAllergies","ChildAlternateParents"]]}' \
+  > /dev/null
+
+gws sheets spreadsheets values update \
+  --params "{\"spreadsheetId\":\"$SHEET_ID\",\"range\":\"DJSignups!A1:L1\",\"valueInputOption\":\"RAW\"}" \
+  --json '{"values":[["Timestamp","RefCode","DJName","RealName","Email","SetStyle","SetLengthMin","PreferredTime","GearNeeded","Links","Notes","ExperienceLevel"]]}' \
   > /dev/null
 
 gws sheets spreadsheets values update \

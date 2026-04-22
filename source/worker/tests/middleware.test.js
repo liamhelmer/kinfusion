@@ -41,6 +41,7 @@ const validRegBody = {
   email: 'test@example.com',
   tier: '350',
   arrivalDay: 'friday',
+  leavingDay: 'sunday',
   codeOfConductAccepted: true,
   'cf-turnstile-response': 'test-turnstile-token',
   website: '',

@@ -47,14 +47,24 @@ function setupSpreadsheet() {
         'ArrivalDay', 'LeavingDay', 'Accommodation', 'ChildrenCount',
         'ParentPhone', 'DietaryNotes', 'AccessibilityNotes', 'HowDidYouHear',
         'PhotoConsent', 'CodeOfConductAccepted', 'Status', 'PaymentStatus', 'Notes',
-        'Donation', 'RVLength'
+        'Donation', 'RVLength', 'AdultAllergies', 'FridgeSpace',
+        'IsYouth13to18', 'GuardianNames', 'KidsAgreementsAccepted'
+      ]
+    },
+    {
+      name: 'Children',
+      headers: [
+        'Timestamp', 'ParentRefCode', 'ParentName', 'ParentEmail', 'ParentPhone',
+        'ChildName', 'ChildAge', 'ChildRelationship', 'ChildDietary',
+        'ChildAllergies', 'ChildAlternateParents'
       ]
     },
     {
       name: 'DJSignups',
       headers: [
         'Timestamp', 'RefCode', 'DJName', 'RealName', 'Email',
-        'SetStyle', 'SetLengthMin', 'PreferredTime', 'GearNeeded', 'Links', 'Notes'
+        'SetStyle', 'SetLengthMin', 'PreferredTime', 'GearNeeded', 'Links', 'Notes',
+        'ExperienceLevel'
       ]
     },
     {

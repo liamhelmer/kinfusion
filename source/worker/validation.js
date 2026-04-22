@@ -5,6 +5,7 @@ const VALID_ARRIVAL_DAYS = new Set(['thursday', 'friday', 'saturday']);
 const VALID_LEAVING_DAYS = new Set(['sunday', 'monday']);
 const VALID_DURATIONS = new Set(['30', '60', '90']);
 const VALID_ACCOMMODATIONS = new Set(['camping', 'kdol-single', 'kdol-double', 'preset-tent', 'geodesic-dome', 'rv']);
+const VALID_DJ_EXPERIENCE = new Set(['none', 'house-parties', 'local-events', 'weekenders', 'travelled-weekenders']);
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function checkLength(value, max, field) {
@@ -41,6 +42,8 @@ export function validateRegistration(body) {
     checkLength(body.accessibilityNotes, 500, 'accessibilityNotes'),
     checkLength(body.howDidYouHear, 200, 'howDidYouHear'),
     checkLength(body.parentPhone, 50, 'parentPhone'),
+    checkLength(body.adultAllergies, 500, 'adultAllergies'),
+    checkLength(body.guardianNames, 300, 'guardianNames'),
   ];
   for (const result of checks) {
     if (result) return result;
@@ -65,6 +68,12 @@ export function validateRegistration(body) {
     }
   }
 
+  // Youth 13-18 validation: guardian names required if youth checkbox set
+  if (body.isYouth13to18 === true || body.isYouth13to18 === 'true') {
+    const guardianCheck = checkRequired(body.guardianNames, 'guardianNames');
+    if (guardianCheck) return guardianCheck;
+  }
+
   // Children validation
   const children = body.children;
   if (children !== undefined) {
@@ -78,10 +87,26 @@ export function validateRegistration(body) {
       if (typeof child.age !== 'number' || child.age < 0 || child.age > 12) {
         return { valid: false, field: 'children', code: 'VALIDATION' };
       }
+      if (child.relationship !== undefined && (typeof child.relationship !== 'string' || child.relationship.length > 100)) {
+        return { valid: false, field: 'children', code: 'VALIDATION' };
+      }
+      if (child.dietary !== undefined && (typeof child.dietary !== 'string' || child.dietary.length > 500)) {
+        return { valid: false, field: 'children', code: 'VALIDATION' };
+      }
+      if (child.alternateParents !== undefined && (typeof child.alternateParents !== 'string' || child.alternateParents.length > 300)) {
+        return { valid: false, field: 'children', code: 'VALIDATION' };
+      }
+      if (child.allergies !== undefined && (typeof child.allergies !== 'string' || child.allergies.length > 500)) {
+        return { valid: false, field: 'children', code: 'VALIDATION' };
+      }
     }
     if (children.length > 0) {
       const phoneCheck = checkRequired(body.parentPhone, 'parentPhone');
       if (phoneCheck) return phoneCheck;
+      // Kids agreements acceptance required when bringing children
+      if (body.kidsAgreementsAccepted !== true && body.kidsAgreementsAccepted !== 'true') {
+        return { valid: false, field: 'kidsAgreementsAccepted', code: 'VALIDATION' };
+      }
     }
   }
 
@@ -122,6 +147,8 @@ export function validateDJ(body) {
     checkLength(body.gearNeeded, 500, 'gearNeeded'),
     checkLength(body.notes, 500, 'notes'),
     checkLength(body.links, 500, 'links'),
+    checkRequired(body.experienceLevel, 'experienceLevel'),
+    VALID_DJ_EXPERIENCE.has(String(body.experienceLevel || '')) ? null : { valid: false, field: 'experienceLevel', code: 'VALIDATION' },
   ];
   for (const result of checks) {
     if (result) return result;

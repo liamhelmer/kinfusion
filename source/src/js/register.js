@@ -4,6 +4,8 @@ const form = document.getElementById('registration-form');
 const childrenList = document.getElementById('children-list');
 const addChildBtn = document.getElementById('add-child-btn');
 const parentPhoneField = document.getElementById('parentPhoneField');
+const kidsAgreementsField = document.getElementById('kidsAgreementsField');
+const kidsAgreementsCheckbox = document.getElementById('kidsAgreementsAccepted');
 let childCount = 0;
 
 const ARRIVAL_DAY_NUMS = { thursday: 0, friday: 1, saturday: 2 };
@@ -60,6 +62,7 @@ function buildConfirmation(refCode, name, tier, accommodation, arrivalDay, leavi
   const accLabel = esc(ACCOMMODATION_LABELS[accommodation] || accommodation);
   const tierLabel = esc(TIER_LABELS[tier] || ('$' + tier));
   const isCamping = accommodation === 'camping' || accommodation === 'rv';
+  const isRv = accommodation === 'rv';
 
   const accRow = (accommodation === 'rv' || accommodation === 'camping') ? '' : `
       <tr>
@@ -81,6 +84,8 @@ function buildConfirmation(refCode, name, tier, accommodation, arrivalDay, leavi
 
   const accNote = isCamping ? '' : `
     <p class="field-help">Your accommodation preference has been noted. We'll connect you with Rhizome Springs to confirm and arrange payment.</p>`;
+
+  const rvHookupItem = isRv ? '<li>No RV hookups</li>' : '';
 
   const div = document.createElement('div');
   div.innerHTML = `
@@ -120,11 +125,16 @@ function buildConfirmation(refCode, name, tier, accommodation, arrivalDay, leavi
       <li>3 meals per day (breakfast, lunch, dinner) on Friday, Saturday, and Sunday</li>
       <li>No meals on Thursday or Monday</li>
       <li>Nightly dances</li>
+      <li>Self-managed camping</li>
+      <li>Dance spaces</li>
+      <li>Sound system</li>
+      <li>Love</li>
+      ${rvHookupItem}
     </ul>
     ${accNote}
 
     <h2>How to pay</h2>
-    <p>Once your application is accepted, send your payment using one of the options below. Include your reference code <strong>${esc(refCode)}</strong> in the message.</p>
+    <p>Send your payment using one of the options below. Include your reference code <strong>${esc(refCode)}</strong> in the message.</p>
 
     <h3>Canadian residents &mdash; Interac e-Transfer</h3>
     <p>
@@ -153,6 +163,15 @@ function updateParentPhoneVisibility() {
     phoneInput.removeAttribute('required');
     phoneInput.removeAttribute('aria-required');
   }
+  kidsAgreementsField.hidden = !hasChildren;
+  if (hasChildren) {
+    kidsAgreementsCheckbox.setAttribute('required', '');
+    kidsAgreementsCheckbox.setAttribute('aria-required', 'true');
+  } else {
+    kidsAgreementsCheckbox.removeAttribute('required');
+    kidsAgreementsCheckbox.removeAttribute('aria-required');
+    kidsAgreementsCheckbox.checked = false;
+  }
 }
 
 function addChild() {
@@ -171,7 +190,30 @@ function addChild() {
         <input type="number" id="childAge_${idx}" name="childAge_${idx}"
                required aria-required="true" min="0" max="12" autocomplete="off">
       </div>
+      <div class="field">
+        <label for="childRelationship_${idx}">Relationship</label>
+        <input type="text" id="childRelationship_${idx}" name="childRelationship_${idx}"
+               maxlength="100" autocomplete="off" placeholder="e.g. child, step-child, niece">
+      </div>
       <button type="button" class="btn-remove-child" aria-label="Remove this child">&times;</button>
+    </div>
+    <div class="child-fields">
+      <div class="field">
+        <label for="childDietary_${idx}">Dietary needs (optional)</label>
+        <textarea id="childDietary_${idx}" name="childDietary_${idx}" maxlength="500" rows="2"></textarea>
+      </div>
+      <div class="field">
+        <label for="childAllergies_${idx}">Serious allergies or medical conditions (optional)</label>
+        <textarea id="childAllergies_${idx}" name="childAllergies_${idx}" maxlength="500" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="child-fields">
+      <div class="field">
+        <label for="childAlternateParents_${idx}">Alternate parent or guardian names (optional)</label>
+        <input type="text" id="childAlternateParents_${idx}" name="childAlternateParents_${idx}"
+               maxlength="300" autocomplete="off" aria-describedby="childAlternateParents_${idx}_help">
+        <p id="childAlternateParents_${idx}_help" class="field-help">Other parents or guardians who may pick up or care for this child at the event.</p>
+      </div>
     </div>`;
   row.querySelector('.btn-remove-child').addEventListener('click', () => {
     row.remove();
@@ -210,6 +252,21 @@ hasChildrenCheckbox.addEventListener('change', () => {
   }
 });
 
+const isYouthCheckbox = document.getElementById('isYouth13to18');
+const guardianNamesField = document.getElementById('guardianNamesField');
+const guardianNamesInput = document.getElementById('guardianNames');
+isYouthCheckbox.addEventListener('change', () => {
+  guardianNamesField.hidden = !isYouthCheckbox.checked;
+  if (isYouthCheckbox.checked) {
+    guardianNamesInput.setAttribute('required', '');
+    guardianNamesInput.setAttribute('aria-required', 'true');
+  } else {
+    guardianNamesInput.removeAttribute('required');
+    guardianNamesInput.removeAttribute('aria-required');
+    guardianNamesInput.value = '';
+  }
+});
+
 initForm(form, {
   formName: 'register',
   transformBody(formEl, body) {
@@ -217,12 +274,25 @@ initForm(form, {
     const children = Array.from(rows).map(row => {
       const nameInput = row.querySelector('input[name^="childName_"]');
       const ageInput  = row.querySelector('input[name^="childAge_"]');
+      const relInput  = row.querySelector('input[name^="childRelationship_"]');
+      const dietInput = row.querySelector('textarea[name^="childDietary_"]');
+      const allergyInput = row.querySelector('textarea[name^="childAllergies_"]');
+      const altInput = row.querySelector('input[name^="childAlternateParents_"]');
       const age = parseInt(ageInput.value, 10);
-      return { name: nameInput.value, age: isNaN(age) ? 0 : age };
+      return {
+        name: nameInput.value,
+        age: isNaN(age) ? 0 : age,
+        relationship: relInput ? relInput.value : '',
+        dietary: dietInput ? dietInput.value : '',
+        allergies: allergyInput ? allergyInput.value : '',
+        alternateParents: altInput ? altInput.value : '',
+      };
     });
     const cleaned = {};
     for (const key of Object.keys(body)) {
-      if (!key.startsWith('childName_') && !key.startsWith('childAge_')) {
+      if (!key.startsWith('childName_') && !key.startsWith('childAge_')
+          && !key.startsWith('childRelationship_') && !key.startsWith('childDietary_')
+          && !key.startsWith('childAllergies_') && !key.startsWith('childAlternateParents_')) {
         cleaned[key] = body[key];
       }
     }

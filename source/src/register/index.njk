@@ -1,7 +1,7 @@
 ---
 title: "Register"
 layout: base.njk
-description: "Apply to attend Kin-Fusion Campout 2026 — a fusion dance unconference on Saltspring Island, September 11-13."
+description: "Apply to attend Kin-Fusion Campout 2026 — a fusion dance unconference on Saltspring Island, September 10-13."
 ---
 <div class="container">
   <div id="register-intro">
@@ -119,6 +119,8 @@ description: "Apply to attend Kin-Fusion Campout 2026 — a fusion dance unconfe
     <fieldset>
       <legend>Logistics</legend>
 
+      <p class="notice-food"><strong>Note:</strong> No food is provided on Thursday September 10 or Monday September 14. Plan your own meals if arriving Thursday or departing Monday.</p>
+
       <div class="field">
         <label for="arrivalDay">Arrival day <span aria-hidden="true">*</span></label>
         <select id="arrivalDay" name="arrivalDay" required aria-required="true">
@@ -140,13 +142,27 @@ description: "Apply to attend Kin-Fusion Campout 2026 — a fusion dance unconfe
 
       <div class="field">
         <label class="checkbox-label">
+          <input type="checkbox" id="isYouth13to18" name="isYouth13to18">
+          <span>I am 13–18 and my parent(s) or guardian(s) are attending</span>
+        </label>
+      </div>
+
+      <div class="field" id="guardianNamesField" hidden>
+        <label for="guardianNames">Guardian name(s) <span aria-hidden="true">*</span></label>
+        <input type="text" id="guardianNames" name="guardianNames" maxlength="300"
+               autocomplete="off" aria-describedby="guardianNames-help">
+        <p id="guardianNames-help" class="field-help">List the name(s) of the parent(s) or guardian(s) attending with you.</p>
+      </div>
+
+      <div class="field">
+        <label class="checkbox-label">
           <input type="checkbox" id="hasChildrenCheckbox" name="hasChildren">
           <span>I have children under 13 attending with me <span class="field-help">(kids 12 and under are free)</span></span>
         </label>
       </div>
 
       <div class="field" id="childrenField" hidden>
-        <p class="field-help">Add each child's name and age below.</p>
+        <p class="field-help">Add each child's details below.</p>
         <div id="children-list" aria-label="Children attending"></div>
         <button type="button" id="add-child-btn" class="btn btn-secondary btn-sm">+ Add a child</button>
       </div>
@@ -156,6 +172,34 @@ description: "Apply to attend Kin-Fusion Campout 2026 — a fusion dance unconfe
         <input type="tel" id="parentPhone" name="parentPhone" maxlength="50"
                autocomplete="tel" aria-describedby="parentPhone-help">
         <p id="parentPhone-help" class="field-help">Phone number(s) organizers can reach in an emergency.</p>
+      </div>
+
+      <div id="kidsAgreementsField" hidden>
+        <div class="notice kids-agreements">
+          <h3>Kids Agreements</h3>
+          <ul>
+            <li>Minors under 18 are welcome at dances until 11 pm.</li>
+            <li>Kids under 12 will always have a Designated Adult.</li>
+            <li>Kids are responsible for knowing who their Designated Adult is.</li>
+            <li>One adult may be the Designated Adult for at most four children at one time.</li>
+            <li>When a child's behavior causes a disturbance, their Adult is responsible for it.</li>
+            <li>All attendees, including kids, are subject to these standards at dances:
+              <ul>
+                <li>The dance floor is for dancing. If you need to cross the dance floor, you will go around the edge.</li>
+                <li>The dance area is an Inside Voices area. Keep your loud voices outside during dances.</li>
+                <li>People who cannot meet these standards will be asked to stay away from the dance area.</li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+        <div class="field consent-field">
+          <label class="checkbox-label">
+            <input type="checkbox" name="kidsAgreementsAccepted" id="kidsAgreementsAccepted"
+                   aria-describedby="kids-agreements-help">
+            <span>I have read and agree to the Kids Agreements above. <span aria-hidden="true">*</span></span>
+          </label>
+          <p id="kids-agreements-help" class="field-help">Required when registering children under 13.</p>
+        </div>
       </div>
 
       <div class="notice notice-info">
@@ -197,6 +241,7 @@ description: "Apply to attend Kin-Fusion Campout 2026 — a fusion dance unconfe
         <label for="rvLength">RV length (feet)</label>
         <input type="number" id="rvLength" name="rvLength" min="10" max="100" value="25" autocomplete="off" aria-describedby="rvLength-help">
         <p id="rvLength-help" class="field-help">Approximate length of your RV in feet.</p>
+        <p class="notice-rv"><strong>Heads-up:</strong> The path to Rhizome may be difficult for larger RVs to get up. We do not recommend bringing an RV over 35 feet!</p>
       </div>
 
       <p class="field-help">Non-camping accommodations must be reserved in advance directly with Rhizome Springs. We'll forward your preference to them after your application is accepted.</p>
@@ -206,11 +251,27 @@ description: "Apply to attend Kin-Fusion Campout 2026 — a fusion dance unconfe
     <fieldset>
       <legend>Additional information</legend>
 
+      <div class="field-row">
+        <div class="field">
+          <label for="dietaryNotes">Dietary needs (optional)</label>
+          <textarea id="dietaryNotes" name="dietaryNotes" maxlength="500" rows="3"
+                    aria-describedby="dietary-help"></textarea>
+          <p id="dietary-help" class="field-help">Restrictions or preferences. Max 500 characters.</p>
+        </div>
+
+        <div class="field">
+          <label for="adultAllergies">Serious allergies or medical conditions (optional)</label>
+          <textarea id="adultAllergies" name="adultAllergies" maxlength="500" rows="3"
+                    aria-describedby="adultAllergies-help"></textarea>
+          <p id="adultAllergies-help" class="field-help">Kept confidential; shared only with organizers so we can respond in an emergency. Max 500 characters.</p>
+        </div>
+      </div>
+
       <div class="field">
-        <label for="dietaryNotes">Dietary needs (optional)</label>
-        <textarea id="dietaryNotes" name="dietaryNotes" maxlength="500" rows="3"
-                  aria-describedby="dietary-help"></textarea>
-        <p id="dietary-help" class="field-help">Allergies, restrictions, or preferences. Max 500 characters.</p>
+        <label class="checkbox-label">
+          <input type="checkbox" id="fridgeSpaceNeeded" name="fridgeSpaceNeeded">
+          <span>I (or my children) will need fridge space provided for food or medication</span>
+        </label>
       </div>
 
       <div class="field">

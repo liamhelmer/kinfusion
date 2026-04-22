@@ -14,7 +14,7 @@
   </div>
 
   <h2 style="color: #2d6a4f;">Payment summary</h2>
-  <p>Once your application is accepted, send this amount using one of the payment methods below.</p>
+  <p>Send this amount using one of the payment methods below.</p>
 
   <table style="width:100%; border-collapse:collapse; margin:15px 0;">
     <tbody>
@@ -51,12 +51,19 @@
 
   <h2 style="color: #2d6a4f;">What&rsquo;s included</h2>
   <ul>
-    <li><?= accommodationLabel ?><? if (accommodation !== 'camping') { ?> (<?= nights ?> night<?= nights !== 1 ? 's' : '' ?>)<? } ?></li>
+    <li><?= accommodationLabel ?><? if (accommodation !== 'camping' && accommodation !== 'rv') { ?> (<?= nights ?> night<?= nights !== 1 ? 's' : '' ?>)<? } ?></li>
     <li>3 meals per day (breakfast, lunch, and dinner) on Friday, Saturday, and Sunday</li>
     <li>No meals on Thursday or Monday</li>
     <li>Nightly dances</li>
+    <li>Self-managed camping</li>
+    <li>Dance spaces</li>
+    <li>Sound system</li>
+    <li>Love</li>
+    <?  if (accommodation === 'rv') { ?>
+    <li>No RV hookups</li>
+    <?  } ?>
   </ul>
-  <? if (accommodation !== 'camping') { ?>
+  <? if (accommodation !== 'camping' && accommodation !== 'rv') { ?>
   <p style="color:#666; font-size:0.9em;">Your accommodation preference has been noted. We&rsquo;ll connect you with Rhizome Springs to confirm and arrange payment for accommodations separately.</p>
   <? } ?>
 

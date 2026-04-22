@@ -66,7 +66,8 @@ function handleRegister(payload) {
     return { ok: false, code: 'SHEET_NOT_FOUND' };
   }
 
-  // Column order: 22 original + col 23 (Donation) + col 24 (RVLength)
+  // Column order: 22 original + Donation, RVLength, AdultAllergies,
+  // FridgeSpace, IsYouth13to18, GuardianNames, KidsAgreementsAccepted (28 total)
   sheet.appendRow([
     timestamp,
     refCode,
@@ -91,7 +92,12 @@ function handleRegister(payload) {
     'unpaid',
     '',
     pricing.donation || 0,
-    pricing.accommodation === 'rv' ? (parseInt(payload.rvLength) || 25) : ''
+    pricing.accommodation === 'rv' ? (parseInt(payload.rvLength) || 25) : '',
+    payload.adultAllergies || '',
+    payload.fridgeSpaceNeeded === true || payload.fridgeSpaceNeeded === 'true',
+    payload.isYouth13to18 === true || payload.isYouth13to18 === 'true',
+    payload.guardianNames || '',
+    payload.kidsAgreementsAccepted === true || payload.kidsAgreementsAccepted === 'true'
   ]);
 
   // Write each child to the Children tab
@@ -99,7 +105,11 @@ function handleRegister(payload) {
     var childSheet = ss.getSheetByName('Children');
     if (!childSheet) {
       childSheet = ss.insertSheet('Children');
-      childSheet.appendRow(['Timestamp', 'ParentRefCode', 'ParentName', 'ParentEmail', 'ParentPhone', 'ChildName', 'ChildAge']);
+      childSheet.appendRow([
+        'Timestamp', 'ParentRefCode', 'ParentName', 'ParentEmail', 'ParentPhone',
+        'ChildName', 'ChildAge', 'ChildRelationship', 'ChildDietary',
+        'ChildAllergies', 'ChildAlternateParents'
+      ]);
     }
     for (var i = 0; i < children.length; i++) {
       childSheet.appendRow([
@@ -109,7 +119,11 @@ function handleRegister(payload) {
         payload.email || '',
         payload.parentPhone || '',
         children[i].name || '',
-        children[i].age !== undefined ? children[i].age : ''
+        children[i].age !== undefined ? children[i].age : '',
+        children[i].relationship || '',
+        children[i].dietary || '',
+        children[i].allergies || '',
+        children[i].alternateParents || ''
       ]);
     }
   }
@@ -149,6 +163,11 @@ function handleRegister(payload) {
     '3 meals/day (breakfast, lunch, dinner) on Friday, Saturday, Sunday',
     'No meals on Thursday or Monday',
     'Nightly dances',
+    'Self-managed camping',
+    'Dance spaces',
+    'Sound system',
+    'Love',
+    (pricing.accommodation === 'rv' ? 'No RV hookups' : ''),
     '',
     'Practical info (directions, what to bring): kinfusion.dance/site-info/',
     '',

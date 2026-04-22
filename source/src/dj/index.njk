@@ -11,6 +11,18 @@ description: "Sign up to DJ at Kin-Fusion Campout 2026 — share your music with
   <h2>What We're Looking For</h2>
   <p>We welcome DJs who play for fusion dancing — blues, neo-soul, ecstatic, electronic, world, and the in-between. Sets typically run 30–120 minutes. We're especially interested in music that creates space for connection, playfulness, and exploration.</p>
 
+  <div class="notice">
+    <h3>DJ Guidelines</h3>
+    <p>We want fusion DJs who:</p>
+    <ul>
+      <li>actively select music during their sets, adjusting to the dancers in the room (no set-and-forget playlists)</li>
+      <li>prioritize high quality sound: 320kbps, or lossless. Use an external sound card if necessary. No phones.</li>
+      <li>are vigilant about not playing AI music in their sets</li>
+      <li>are respectful of other cultures when including their music in their sets</li>
+      <li>have their music pre-downloaded on their device</li>
+    </ul>
+  </div>
+
   <noscript>
     <div class="noscript-notice">
       <p>The DJ signup form requires JavaScript. If you are unable to use JavaScript, please <a href="mailto:{{ site.email }}">email us</a> to sign up.</p>
@@ -70,6 +82,18 @@ description: "Sign up to DJ at Kin-Fusion Campout 2026 — share your music with
         <input type="number" id="setLengthMin" name="setLengthMin" required aria-required="true"
                min="30" max="180" step="15" aria-describedby="length-help">
         <p id="length-help" class="field-help">Typical range is 30–120 minutes</p>
+      </div>
+
+      <div class="field">
+        <label for="experienceLevel">What's your DJ experience level? <span aria-hidden="true">*</span></label>
+        <select id="experienceLevel" name="experienceLevel" required aria-required="true">
+          <option value="">Select your experience level&hellip;</option>
+          <option value="none">None</option>
+          <option value="house-parties">I've played house parties</option>
+          <option value="local-events">I've played local events</option>
+          <option value="weekenders">I've played weekenders</option>
+          <option value="travelled-weekenders">I've travelled to play weekenders</option>
+        </select>
       </div>
 
       <div class="field">

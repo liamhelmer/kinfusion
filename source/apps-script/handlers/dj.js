@@ -32,6 +32,7 @@ function handleDJSignup(payload) {
     payload.gearNeeded || '',
     payload.links || '',
     payload.notes || '',
+    payload.experienceLevel || '',
   ]);
 
   var subject = 'Kin-Fusion Campout \u2014 DJ signup received (' + refCode + ')';

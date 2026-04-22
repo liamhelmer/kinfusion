@@ -6,6 +6,7 @@ const validReg = {
   email: 'test@example.com',
   tier: '350',
   arrivalDay: 'friday',
+  leavingDay: 'sunday',
   codeOfConductAccepted: true,
 };
 
@@ -78,6 +79,7 @@ const validDJ = {
   email: 'dj@example.com',
   setStyle: 'Deep house',
   setLengthMin: '60',
+  experienceLevel: 'local-events',
 };
 
 describe('validateDJ', () => {

@@ -659,11 +659,56 @@ form legend {
   gap: var(--space-sm);
   align-items: flex-end;
   flex-wrap: wrap;
+  margin-bottom: var(--space-xs);
+}
+
+.child-fields:last-child {
+  margin-bottom: 0;
 }
 
 .child-fields .field {
   flex: 1;
   min-width: 140px;
+  margin-bottom: 0;
+}
+
+/* Side-by-side dietary/allergies field pair */
+.field-row {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.field-row .field {
+  flex: 1;
+  min-width: 240px;
+}
+
+/* In-form warning notices */
+.notice-food,
+.notice-rv {
+  background: var(--color-noscript, #fff3cd);
+  border-left: 4px solid var(--color-noscript-border, #ffc107);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--border-radius);
+  margin: 0 0 var(--space-sm);
+  font-size: 0.95rem;
+}
+
+.notice-rv {
+  margin-top: var(--space-xs);
+}
+
+/* Kids Agreements block */
+.kids-agreements {
+  margin: var(--space-sm) 0;
+}
+
+.kids-agreements h3 {
+  margin-top: 0;
+}
+
+.kids-agreements ul {
   margin-bottom: 0;
 }
 
