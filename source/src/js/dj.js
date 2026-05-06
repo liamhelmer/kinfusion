@@ -3,13 +3,9 @@ import { initForm } from './form-handler.js';
 const form = document.getElementById('dj-form');
 initForm(form, {
   formName: 'dj-signup',
-  onSuccess: ({ refCode }) => {
+  onSuccess: () => {
     const p = document.createElement('p');
-    p.textContent = 'Signup received! Your reference code is ';
-    const strong = document.createElement('strong');
-    strong.textContent = refCode;
-    p.appendChild(strong);
-    p.appendChild(document.createTextNode('. We\'ll be in touch about the schedule.'));
+    p.textContent = 'Signup received! We\'ll be in touch by July 10th (at the latest) regarding your application.';
     form.replaceWith(p);
   },
 });

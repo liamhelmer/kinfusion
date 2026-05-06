@@ -35,15 +35,11 @@ function handleDJSignup(payload) {
     payload.experienceLevel || '',
   ]);
 
-  var subject = 'Kin-Fusion Campout \u2014 DJ signup received (' + refCode + ')';
+  var subject = 'Kin-Fusion Campout \u2014 DJ signup received';
   var plainBody = [
     'Hi ' + (payload.djName || 'there') + ',',
     '',
-    'Your DJ signup for Kin-Fusion Campout 2026 has been received.',
-    '',
-    'Reference: ' + refCode,
-    '',
-    'Organizers will be in touch about the schedule and logistics.',
+    'Your DJ signup for Kin-Fusion Campout 2026 has been received. We will be in touch by July 10th (at the latest) regarding your application. Thank you so much for your interest and we\'re excited to see what you have shared! We will be in touch about any scheduling and gear logistics at that time.',
     '',
     'Questions? Reply to this email or contact hello@kinfusion.dance',
     '',
