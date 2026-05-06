@@ -78,7 +78,6 @@ const validDJ = {
   realName: 'Real Name',
   email: 'dj@example.com',
   setStyle: 'Deep house',
-  setLengthMin: '60',
   experienceLevel: 'local-events',
 };
 

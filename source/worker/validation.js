@@ -142,7 +142,6 @@ export function validateDJ(body) {
     EMAIL_REGEX.test(String(body.email || '')) ? null : { valid: false, field: 'email', code: 'VALIDATION' },
     checkRequired(body.setStyle, 'setStyle'),
     checkLength(body.setStyle, 200, 'setStyle'),
-    checkRequired(body.setLengthMin, 'setLengthMin'),
     checkLength(body.preferredTime, 200, 'preferredTime'),
     checkLength(body.gearNeeded, 500, 'gearNeeded'),
     checkLength(body.notes, 500, 'notes'),
@@ -152,10 +151,6 @@ export function validateDJ(body) {
   ];
   for (const result of checks) {
     if (result) return result;
-  }
-  const setLen = parseInt(body.setLengthMin, 10);
-  if (isNaN(setLen) || setLen < 15 || setLen > 240) {
-    return { valid: false, field: 'setLengthMin', code: 'VALIDATION' };
   }
   return { valid: true };
 }
