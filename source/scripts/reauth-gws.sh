@@ -8,6 +8,9 @@
 # Output: captures the OAuth URL to /tmp/gws-auth-url.txt and auto-opens it in
 # the default browser via xdg-open. If xdg-open is unavailable, the URL is
 # echoed inside a code block so it survives terminal word-wrap.
+#
+# Do not add gmail.modify here. The separately owned payment mailbox is
+# authorized through Apps Script and its token never enters this gws profile.
 
 set -e
 
