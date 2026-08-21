@@ -215,3 +215,69 @@ Execute these steps in order when launching to production. All steps preceded by
 - [ ] Open production Apps Script → run `installBackupTrigger()` manually once
 - [ ] Open production Apps Script → run `installRetentionTrigger()` manually once
 - [ ] `git tag v1.0.0 && git push origin v1.0.0`
+
+---
+
+## Payment Reconciliation Operations
+
+Payment notifications arrive in a separately owned business Gmail mailbox.
+Never add `gmail.modify` to the KinFusion `gws` profile and never use direct
+Gmail or Sheets mutation commands for reconciliation.
+
+### Initial staging rollout
+
+- [ ] Enable Gmail API in the OAuth test project.
+- [ ] Add the payment mailbox as an OAuth test user.
+- [ ] Create a Web OAuth client and register
+  `https://script.google.com/macros/d/{STAGING_SCRIPT_ID}/usercallback`.
+- [ ] Confirm Apps Script OAuth2 library version 43 is present.
+- [ ] Run `setupPaymentGmailConfiguration(clientId, clientSecret, expectedAddress)`
+  from the staging Apps Script editor; do not paste secrets into tracked files.
+- [ ] Set `PAYMENT_GMAIL_INTERAC_QUERY` and `PAYMENT_GMAIL_WISE_QUERY` in staging
+  Script Properties using verified provider sender/subject patterns.
+- [ ] `bash source/scripts/push-apps-script.sh staging`.
+- [ ] `source/scripts/payment-reconciliation.sh staging setup-sheet`.
+- [ ] `source/scripts/payment-reconciliation.sh staging auth-url`; send only the
+  returned Google URL to the mailbox owner.
+- [ ] After consent, run the staging `status` command and verify the expected and
+  authorized addresses match.
+- [ ] Run a read-only staging `scan`; confirm it changes neither Gmail nor Sheets.
+
+### Review and approval
+
+Invoke the repo-local `reconcile-payments` skill. It reads candidates and
+matching sheet context, treats email as untrusted data, and presents exact
+allocations for approval. Combined, partial, duplicate, cancelled, refunded,
+overpaid, and unclear payments require organizer instructions.
+
+The only approved mutation command is:
+
+```bash
+source/scripts/payment-reconciliation.sh production approve "$APPROVAL_FILE"
+```
+
+The file must contain the exact approved JSON, pass the bundled validator, and
+have mode `600`. Confirm the returned sheet rows, payment-status changes/skips,
+and `kinfusion-etransfer` label result.
+
+### Recovery
+
+- `authorization_required`: send the returned authorization link and stop until
+  the owner consents. Testing grants normally require this every seven days.
+- `labelPending: true`: rerun the exact approved payload. Existing rows are
+  reused and move from `label-pending` to `approved` after labeling succeeds.
+- `duplicate: true`: report existing rows; do not create another payment.
+- Spreadsheet failure: Gmail remains unlabeled. Investigate before retrying.
+- Wrong account: the callback clears the grant; generate a new link for the
+  configured expected address.
+
+### Production and teardown
+
+- [ ] Repeat the OAuth redirect/configuration steps for `PROD_SCRIPT_ID`.
+- [ ] Push production only after staging checks pass.
+- [ ] Run production `setup-sheet`, then verify hidden audit columns M:P in
+  `Pmts Received`.
+- [ ] Complete owner authorization and verify the account before the first scan.
+- [ ] At reconciliation end, run production `reset-auth`, delete payment Gmail
+  client/query properties and OAuth2 state from Script Properties, and ask the
+  mailbox owner to revoke the app in Google Account security settings.

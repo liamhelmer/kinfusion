@@ -39,7 +39,13 @@
 | `handleDJSignup` | `source/apps-script/handlers/dj.js` | Appends DJ signup row, sends confirmation email | GmailApp, SpreadsheetApp, shared.js | Y |
 | `runWeeklyBackup` / `installBackupTrigger` | `source/apps-script/backup.js` | Exports operational Sheet as XLSX to Drive weekly (Sunday midnight). Idempotent — skips if today's backup exists. | DriveApp, UrlFetchApp, ScriptApp | Y |
 | `runRetentionCheck` / `installRetentionTrigger` | `source/apps-script/retention.js` | Daily trigger: no-op before 2026-12-12; on/after archives aggregate counts to KinFusion-2026-Archive tab, deletes PII rows, notifies organizer. | SpreadsheetApp, GmailApp, ScriptApp | Y |
+| Payment Gmail pure helpers | `source/apps-script/paymentHelpers.js` | MIME/body normalization without attachments, provider classification, allocation validation, header mapping, and balance comparison. | Utilities | Y |
+| Payment Gmail OAuth | `source/apps-script/paymentGmailAuth.js` | Separately authorizes and account-binds the business payment mailbox; exposes safe status/link/reset functions without token output. | Apps Script OAuth2 library v43, UrlFetchApp, Script Properties | Y |
+| Payment Gmail bridge | `source/apps-script/paymentGmailBridge.js` | Scans fixed Interac/Wise boundaries, returns normalized candidates, and applies only the `kinfusion-etransfer` label. | Gmail REST API through payment Gmail OAuth | Y |
+| `approvePaymentReconciliation` / `setupPaymentReconciliationSheet` | `source/apps-script/paymentReconciliation.js` | Locked sheet-first payment allocation, hidden audit fields, status updates, duplicate suppression, and `label-pending` recovery. | SpreadsheetApp, payment Gmail bridge | Y |
 | smoke-test-register.sh | `source/scripts/smoke-test-register.sh` | Bash script for T-2.9 first-form smoke test against the staging preview Worker. Sends a `curl` POST and validates the JSON response contains a refCode. | `curl`, `jq` | Y |
+| Payment reconciliation command facade | `source/scripts/payment-reconciliation.sh` | Executes only approved Apps Script payment status, scan, setup, reset, and approval functions using the environment script ID. | `gws`, Python 3 | Y |
+| `reconcile-payments` Codex skill | `.agents/skills/reconcile-payments/` | Human-reviewed Interac/Wise matching workflow with deterministic approval schema validation. | payment reconciliation facade, read-only Sheets API | Y |
 
 ---
 
@@ -53,6 +59,8 @@
 | axe-core CLI | `.github/workflows/preview.yml` | `@axe-core/cli@^4` | WCAG 2.2 AA accessibility audit on every PR against locally-served build |
 | Lighthouse CI | `.github/workflows/preview.yml`, `source/lighthouserc.json` | `@lhci/cli@^0.15` | Mobile Lighthouse scores — fails on perf <85 / a11y <95 per ADR R10.2 |
 | Playwright | `source/e2e/`, `source/playwright.config.js` | `@playwright/test@^1.50` | E2E tests for all three forms; golden path, duplicate, rate-limit. Run via PLAYWRIGHT_BASE_URL |
+| Apps Script OAuth2 | `source/apps-script/appsscript.json`, `paymentGmailAuth.js` | `googleworkspace/apps-script-oauth2` library version 43 | Stores and refreshes the separate payment-mailbox OAuth grant in Script Properties |
+| Gmail payment bridge | `source/apps-script/paymentGmailBridge.js` | Gmail REST API with `gmail.modify` | Fixed-boundary Interac/Wise reads and the single reconciliation label mutation |
 
 ---
 

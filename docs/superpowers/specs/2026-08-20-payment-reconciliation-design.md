@@ -1,8 +1,9 @@
 # Gmail Payment Reconciliation Design
 
 **Date:** 2026-08-20  
-**Status:** Approved for implementation planning  
+**Status:** Implemented
 **Beads issue:** `kf-q10`
+**Implementation plan:** `docs/superpowers/plans/2026-08-20-payment-reconciliation.md`
 
 ## Context
 
