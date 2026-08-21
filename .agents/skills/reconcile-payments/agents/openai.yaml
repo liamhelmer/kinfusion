@@ -1,0 +1,4 @@
+interface:
+  display_name: "Reconcile KinFusion Payments"
+  short_description: "Review and approve event payment matches"
+  default_prompt: "Use $reconcile-payments to review new Interac and Wise notifications for attendee payment matches."
