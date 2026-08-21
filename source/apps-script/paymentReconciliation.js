@@ -298,26 +298,64 @@ function approvePaymentReconciliation(rawPayload) {
       }
     }
 
+    var sheetRows = group.map(function (entry) { return entry.rowNumber; });
     var affectedRefs = payload.allocations.map(function (allocation) { return allocation.refCode; });
-    var paymentStatuses = paymentUpdateRegistrationStatuses_(
-      paymentSheet, setup, registrationSheet, affectedRefs, payload.messageId
-    );
-    var labeled = paymentApplyLabel_(payload.messageId);
+    var paymentStatuses = [];
+    try {
+      paymentStatuses = paymentUpdateRegistrationStatuses_(
+        paymentSheet, setup, registrationSheet, affectedRefs, payload.messageId
+      );
+    } catch (statusError) {
+      return {
+        ok: false,
+        error: 'spreadsheet_status_update_failed',
+        labelPending: true,
+        gmailLabeled: false,
+        sheetRows: sheetRows,
+        paymentStatuses: paymentStatuses,
+      };
+    }
+    var labeled;
+    try {
+      labeled = paymentApplyLabel_(payload.messageId);
+    } catch (labelError) {
+      return {
+        ok: false,
+        error: 'gmail_label_failed',
+        labelPending: true,
+        gmailLabeled: false,
+        sheetRows: sheetRows,
+        paymentStatuses: paymentStatuses,
+      };
+    }
     if (!labeled.ok) {
       return {
         ok: false,
         error: labeled.error || 'gmail_label_failed',
         labelPending: true,
-        sheetRows: group.map(function (entry) { return entry.rowNumber; }),
+        gmailLabeled: false,
+        sheetRows: sheetRows,
         paymentStatuses: paymentStatuses,
       };
     }
-    paymentSetGroupStatus_(paymentSheet, setup, group, 'approved');
+    try {
+      paymentSetGroupStatus_(paymentSheet, setup, group, 'approved');
+    } catch (finalizeError) {
+      return {
+        ok: false,
+        error: 'spreadsheet_finalize_failed',
+        labelPending: true,
+        gmailLabeled: true,
+        sheetRows: sheetRows,
+        paymentStatuses: paymentStatuses,
+        gmail: { messageId: payload.messageId, label: 'kinfusion-etransfer' },
+      };
+    }
     return {
       ok: true,
       duplicate: duplicate,
       recovered: duplicate,
-      sheetRows: group.map(function (entry) { return entry.rowNumber; }),
+      sheetRows: sheetRows,
       paymentStatuses: paymentStatuses,
       gmail: { messageId: payload.messageId, label: 'kinfusion-etransfer' },
     };

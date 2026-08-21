@@ -278,8 +278,10 @@ and `kinfusion-etransfer` label result.
 
 - `authorization_required`: send the returned authorization link and stop until
   the owner consents. Testing grants normally require this every seven days.
-- `labelPending: true`: rerun the exact approved payload. Existing rows are
-  reused and move from `label-pending` to `approved` after labeling succeeds.
+- `labelPending: true`: report `gmailLabeled`, then rerun the exact approved
+  payload. Existing rows are reused and move from `label-pending` to `approved`;
+  `gmailLabeled: true` means Gmail succeeded but sheet finalization still needs
+  recovery.
 - `duplicate: true`: report existing rows; do not create another payment.
 - Spreadsheet failure: Gmail remains unlabeled. Investigate before retrying.
 - Wrong account: the callback clears the grant; generate a new link for the

@@ -143,6 +143,61 @@ describe('approved payment reconciliation', () => {
     expect(payments.cell(3, 16)).toBe('approved');
   });
 
+  test('preserves recovery context when Gmail labeling throws', () => {
+    const { payments } = makeFixture();
+    globalThis.paymentApplyLabel_.mockImplementationOnce(() => { throw new Error('simulated Gmail outage'); });
+
+    const result = globalThis.approvePaymentReconciliation(approval());
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: 'gmail_label_failed',
+      labelPending: true,
+      gmailLabeled: false,
+      sheetRows: [3],
+      paymentStatuses: [{ refCode: 'KF-AB123', status: 'paid', registrationRow: 2 }],
+    });
+    expect(payments.cell(3, 16)).toBe('label-pending');
+  });
+
+  test('reports a labeled message when the final sheet status write fails', () => {
+    const { payments } = makeFixture();
+    globalThis.paymentApplyLabel_.mockImplementationOnce(() => {
+      payments.failWrites = true;
+      return { ok: true, labelId: 'Label_1' };
+    });
+
+    const result = globalThis.approvePaymentReconciliation(approval());
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: 'spreadsheet_finalize_failed',
+      labelPending: true,
+      gmailLabeled: true,
+      sheetRows: [3],
+      gmail: { messageId: 'msg-1', label: 'kinfusion-etransfer' },
+    });
+    expect(payments.cell(3, 16)).toBe('label-pending');
+  });
+
+  test('preserves row context when registration status reconciliation throws', () => {
+    const { payments, registrations } = makeFixture();
+    registrations.failWrites = true;
+
+    const result = globalThis.approvePaymentReconciliation(approval());
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: 'spreadsheet_status_update_failed',
+      labelPending: true,
+      gmailLabeled: false,
+      sheetRows: [3],
+      paymentStatuses: [],
+    });
+    expect(globalThis.paymentApplyLabel_).not.toHaveBeenCalled();
+    expect(payments.cell(3, 16)).toBe('label-pending');
+  });
+
   test('repairs formulas after a partial sheet initialization failure before labeling', () => {
     const { payments } = makeFixture();
     payments.failFormulaWrites = true;

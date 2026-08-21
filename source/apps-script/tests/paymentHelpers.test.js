@@ -77,14 +77,20 @@ describe('payment Gmail normalization', () => {
   });
 
   test.each([
-    ['Your transfer is complete', 'The money was deposited.', 'completed'],
-    ['Transfer pending', 'We are processing this payment.', 'pending'],
-    ['Transfer cancelled', 'No funds were deposited.', 'cancelled'],
-    ['Transfer expired', 'The recipient did not accept in time.', 'expired'],
-    ['Transfer declined', 'This payment failed.', 'declined'],
-    ['Refund completed', 'The payment was returned to the sender.', 'refunded'],
+    ['INTERAC e-Transfer: Your money transfer was deposited', 'The recipient deposited your transfer. Unclaimed transfers expire after 30 days.', 'completed'],
+    ['INTERAC e-Transfer reminder', 'Your transfer is pending. A previous transfer was deposited successfully.', 'pending'],
+    ['INTERAC e-Transfer cancelled', 'The transfer was cancelled. Visit Interac for help with completed transfers.', 'cancelled'],
+    ['INTERAC e-Transfer expired', 'The recipient did not accept in time. Completed transfers cannot be cancelled.', 'expired'],
+    ['INTERAC e-Transfer declined', 'The recipient declined this transfer. Pending transfers expire after 30 days.', 'declined'],
+    ['INTERAC e-Transfer refund', 'The funds were returned to the sender. Your refund was completed.', 'refunded'],
+    ['Wise: You received 200 CAD', 'The money was received successfully. Pending transfers can be tracked in your account.', 'completed'],
+    ['Wise transfer pending', 'We are processing this payment. Completed transfers appear in your activity.', 'pending'],
+    ['Wise transfer cancelled', 'Your transfer was cancelled. Pending card charges may take time to disappear.', 'cancelled'],
+    ['Wise transfer expired', 'This transfer expired. A completed transfer cannot be refunded here.', 'expired'],
+    ['Wise transfer failed', 'The bank declined this payment. Pending transfers may take two business days.', 'declined'],
+    ['Wise refund completed', 'We returned the payment to the sender. Cancelled transfers appear in your activity.', 'refunded'],
     ['A transfer update', 'See the details in your account.', 'unknown'],
-  ])('classifies provider state %s as %s', (subject, body, state) => {
+  ])('classifies a realistic provider notification %s', (subject, body, state) => {
     const helpers = loadHelpers();
     expect(helpers.paymentClassifyTransferState_({ subject }, body)).toBe(state);
   });
@@ -111,7 +117,7 @@ describe('payment allocation validation', () => {
   });
 
   test.each([
-    [{ receivedAt: '2026-08-20T15:00:00.000Z', allocations: [] }, 'message_id_required'],
+    [{ receivedAt: '2026-08-20T15:00:00.000Z', allocations: [] }, 'payload_missing_field'],
     [{ messageId: 'm', receivedAt: 'bad', allocations: [{ refCode: 'KF-A', amountCents: 100, notes: '' }] }, 'received_at_invalid'],
     [{ messageId: 'm', receivedAt: '2026-08-20T15:00:00Z', allocations: [] }, 'allocations_required'],
     [{ messageId: 'm', receivedAt: '2026-08-20T15:00:00Z', allocations: [{ refCode: '', amountCents: 100, notes: '' }] }, 'ref_code_required'],
@@ -122,6 +128,8 @@ describe('payment allocation validation', () => {
     [{ messageId: 'm', receivedAt: '2026-08-20T15:00:00Z', allocations: [{ refCode: 'KF-A', amountCents: 100, notes: 'x'.repeat(501) }] }, 'notes_too_long'],
     [{ messageId: 'm', receivedAt: '2026-08-20T15:00:00Z', allocations: [{ refCode: 'KF-A', amountCents: 100, notes: '', arbitraryMutation: true }] }, 'allocation_unknown_field'],
     [{ messageId: 'm', receivedAt: '2026-08-20T15:00:00Z', allocations: [{ refCode: 'KF-A', amountCents: 100, notes: '' }], arbitraryMutation: true }, 'payload_unknown_field'],
+    [{ messageId: 'm', receivedAt: '2026-08-20T15:00:00Z', allocations: [{ refCode: 'KF-A', amountCents: 100 }] }, 'allocation_missing_field'],
+    [{ messageId: 'm', receivedAt: '2026-08-20T15:00:00Z' }, 'payload_missing_field'],
   ])('rejects malformed allocation payloads', (payload, error) => {
     const helpers = loadHelpers();
     expect(helpers.paymentValidateAllocations_(payload)).toEqual({ ok: false, error });

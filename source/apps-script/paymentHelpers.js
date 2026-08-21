@@ -74,16 +74,28 @@ function paymentClassifyProvider_(headers) {
   return 'unknown';
 }
 
+function paymentTransferStateInText_(text) {
+  var haystack = String(text || '').toLowerCase();
+  var patterns = [
+    ['refunded', /\b(refund(?:ed)?|returned to (?:the )?sender)\b/],
+    ['cancelled', /\bcancel(?:led|ed|lation)?\b/],
+    ['expired', /\bexpir(?:e|ed|y)\b/],
+    ['declined', /\b(declin(?:e|ed)|fail(?:ed|ure))\b/],
+    ['pending', /\b(pending|processing|on hold|awaiting)\b/],
+    ['completed', /\b(complete(?:d)?|deposited|received|successful(?:ly)?)\b/],
+  ];
+  var best = null;
+  patterns.forEach(function (entry) {
+    var match = entry[1].exec(haystack);
+    if (match && (!best || match.index < best.index)) best = { state: entry[0], index: match.index };
+  });
+  return best ? best.state : 'unknown';
+}
+
 function paymentClassifyTransferState_(headers, body) {
   var map = Array.isArray(headers) ? paymentHeaderMap_(headers) : (headers || {});
-  var haystack = ((map.subject || '') + ' ' + (body || '')).toLowerCase();
-  if (/\b(refund(?:ed)?|returned to (?:the )?sender)\b/.test(haystack)) return 'refunded';
-  if (/\bcancel(?:led|ed|lation)?\b/.test(haystack)) return 'cancelled';
-  if (/\bexpir(?:e|ed|y)\b/.test(haystack)) return 'expired';
-  if (/\b(declin(?:e|ed)|fail(?:ed|ure))\b/.test(haystack)) return 'declined';
-  if (/\b(pending|processing|on hold|awaiting)\b/.test(haystack)) return 'pending';
-  if (/\b(complete(?:d)?|deposited|received|successful(?:ly)?)\b/.test(haystack)) return 'completed';
-  return 'unknown';
+  var subjectState = paymentTransferStateInText_(map.subject || '');
+  return subjectState !== 'unknown' ? subjectState : paymentTransferStateInText_(body);
 }
 
 function paymentNormalizeCandidate_(message) {
@@ -111,8 +123,10 @@ function paymentValidateAllocations_(payload) {
   if (payloadKeys.some(function (key) { return ['messageId', 'receivedAt', 'allocations'].indexOf(key) === -1; })) {
     return { ok: false, error: 'payload_unknown_field' };
   }
-  if (payloadKeys.some(function (key) { return key === '__proto__' || key === 'constructor'; })) {
-    return { ok: false, error: 'payload_unknown_field' };
+  if (['messageId', 'receivedAt', 'allocations'].some(function (key) {
+    return !Object.prototype.hasOwnProperty.call(payload, key);
+  })) {
+    return { ok: false, error: 'payload_missing_field' };
   }
   var messageId = String(payload.messageId || '').trim();
   if (!messageId || messageId.length > 256) return { ok: false, error: 'message_id_required' };
@@ -132,6 +146,11 @@ function paymentValidateAllocations_(payload) {
     var allocationKeys = Object.keys(allocation);
     if (allocationKeys.some(function (key) { return ['refCode', 'amountCents', 'notes'].indexOf(key) === -1; })) {
       return { ok: false, error: 'allocation_unknown_field' };
+    }
+    if (['refCode', 'amountCents', 'notes'].some(function (key) {
+      return !Object.prototype.hasOwnProperty.call(allocation, key);
+    })) {
+      return { ok: false, error: 'allocation_missing_field' };
     }
     var refCode = String(allocation.refCode || '').trim().toUpperCase();
     if (!refCode || refCode.length > 64) return { ok: false, error: 'ref_code_required' };
