@@ -226,21 +226,35 @@ Gmail or Sheets mutation commands for reconciliation.
 
 ### Initial staging rollout
 
+- [ ] In staging Apps Script Project Settings, switch the GCP project to the
+  standard `kinfusion-campout` project number. The script and `gws` OAuth client
+  must share this project; default Apps Script projects do not work with
+  `scripts.run`.
+- [ ] Enable Apps Script API and Gmail API in `kinfusion-campout`.
+- [ ] Verify `gws auth status` reports `project_id: kinfusion-campout`, then run
+  `source/scripts/reauth-gws.sh` so the control token has every manifest scope.
 - [ ] Enable Gmail API in the OAuth test project.
 - [ ] Add the payment mailbox as an OAuth test user.
 - [ ] Create a Web OAuth client and register
   `https://script.google.com/macros/d/{STAGING_SCRIPT_ID}/usercallback`.
 - [ ] Confirm Apps Script OAuth2 library version 43 is present.
-- [ ] Run `setupPaymentGmailConfiguration(clientId, clientSecret, expectedAddress)`
-  from the staging Apps Script editor; do not paste secrets into tracked files.
+- [ ] In Apps Script Project Settings → Script Properties, add
+  `PAYMENT_GMAIL_CLIENT_ID`, `PAYMENT_GMAIL_CLIENT_SECRET`, and
+  `PAYMENT_GMAIL_EXPECTED_ADDRESS`; do not paste secrets into tracked files or
+  shell history.
 - [ ] Set `PAYMENT_GMAIL_INTERAC_QUERY` and `PAYMENT_GMAIL_WISE_QUERY` in staging
   Script Properties using verified provider sender/subject patterns.
 - [ ] `bash source/scripts/push-apps-script.sh staging`.
+- [ ] Confirm the deployment exposes an `EXECUTION_API` entry point and that
+  `STAGING_DEPLOY_ID` in `apps-script-ids.sh` matches it. The Execution API
+  accepts the deployment ID, not `STAGING_SCRIPT_ID`.
 - [ ] `source/scripts/payment-reconciliation.sh staging setup-sheet`.
 - [ ] `source/scripts/payment-reconciliation.sh staging auth-url`; send only the
   returned Google URL to the mailbox owner.
 - [ ] After consent, run the staging `status` command and verify the expected and
   authorized addresses match.
+- [ ] Verify a direct `scripts.run` attempt against a trailing-underscore helper
+  such as `paymentGmailFetch_` is rejected as a private/unknown function.
 - [ ] Run a read-only staging `scan`; confirm it changes neither Gmail nor Sheets.
 
 ### Review and approval
@@ -279,5 +293,5 @@ and `kinfusion-etransfer` label result.
   `Pmts Received`.
 - [ ] Complete owner authorization and verify the account before the first scan.
 - [ ] At reconciliation end, run production `reset-auth`, delete payment Gmail
-  client/query properties and OAuth2 state from Script Properties, and ask the
+  client/query/binding properties and OAuth2 state from Script Properties, and ask the
   mailbox owner to revoke the app in Google Account security settings.

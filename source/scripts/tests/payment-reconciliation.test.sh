@@ -27,12 +27,15 @@ assert_capture 'script'
 assert_capture 'scripts'
 assert_capture 'run'
 assert_capture '"function":"getPaymentGmailAuthStatus"'
-assert_capture '10IOiyxAHmV7q5gkORDRK40OdnQKEaj99Z9PKZp61Na3YRBtRXBybM5SK'
+assert_capture 'AKfycby4_ZQFA43axZs0ndSaXhvy_lw5LXvt9hfufSXXy_HheiFxge6kIqjlFIWHJeszSJNB9A'
+if rg -F '10IOiyxAHmV7q5gkORDRK40OdnQKEaj99Z9PKZp61Na3YRBtRXBybM5SK' "$PAYMENT_TEST_CAPTURE" >/dev/null; then
+  fail 'facade used the project ID instead of the API-executable deployment ID'
+fi
 
 "$SCRIPT_DIR/payment-reconciliation.sh" production scan 7 >/dev/null
 assert_capture '"function":"scanPaymentGmailCandidates"'
 assert_capture '"parameters":[{"maxResults":7}]'
-assert_capture '1mcpX6jf6sk4FYZq-NqFHMIIRsrIjpo1KDUnhdlaBDdRmRlXQdv4-XcJa'
+assert_capture 'AKfycbw3loeDIxVO4Z03zhB0CeaH4XIWOHvusYmGQAyC_SNcNiXYzuO-aPvN_-kiEZgC3spr'
 
 payload="$TEST_TMP/approval.json"
 printf '%s\n' '{"messageId":"msg-1","receivedAt":"2026-08-20T15:00:00Z","allocations":[{"refCode":"KF-A","amountCents":100,"notes":""}]}' > "$payload"

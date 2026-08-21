@@ -20,6 +20,7 @@ class FakeRange {
       Array.from({ length: this.cols }, (_, c) => this.sheet.formula(this.row + r, this.col + c)));
   }
   setFormulasR1C1(values) {
+    if (this.sheet.failFormulaWrites) throw new Error('simulated formula failure');
     values.forEach((line, r) => line.forEach((value, c) => this.sheet.setFormula(this.row + r, this.col + c, value)));
     return this;
   }
@@ -32,6 +33,7 @@ class FakeSheet {
     this.formulas = {};
     this.hidden = [];
     this.failWrites = false;
+    this.failFormulaWrites = false;
   }
   getName() { return this.name; }
   getLastRow() { return this.data.length; }
@@ -74,11 +76,11 @@ function makeFixture() {
   globalThis.PropertiesService = { getScriptProperties: () => ({ getProperty: () => 'sheet-id' }) };
   globalThis.SpreadsheetApp = { openById: () => spreadsheet, flush: vi.fn() };
   globalThis.LockService = { getScriptLock: () => lock };
-  globalThis._paymentValidateAllocations = globalThis.__kinfusionPaymentHelpers._paymentValidateAllocations;
-  globalThis._paymentCompareBalance = globalThis.__kinfusionPaymentHelpers._paymentCompareBalance;
-  globalThis._paymentHeaderIndex = globalThis.__kinfusionPaymentHelpers._paymentHeaderIndex;
-  globalThis._paymentCandidateBoundary = vi.fn(() => ({ ok: true, retry: false }));
-  globalThis._paymentApplyLabel = vi.fn(() => ({ ok: true, labelId: 'Label_1' }));
+  globalThis.paymentValidateAllocations_ = globalThis.__kinfusionPaymentHelpers.paymentValidateAllocations_;
+  globalThis.paymentCompareBalance_ = globalThis.__kinfusionPaymentHelpers.paymentCompareBalance_;
+  globalThis.paymentHeaderIndex_ = globalThis.__kinfusionPaymentHelpers.paymentHeaderIndex_;
+  globalThis.paymentCandidateBoundary_ = vi.fn(() => ({ ok: true, retry: false }));
+  globalThis.paymentApplyLabel_ = vi.fn(() => ({ ok: true, labelId: 'Label_1' }));
   return { payments, registrations, lock };
 }
 
@@ -128,28 +130,44 @@ describe('approved payment reconciliation', () => {
 
   test('leaves label-pending after Gmail failure and retries without another append', () => {
     const { payments } = makeFixture();
-    globalThis._paymentApplyLabel.mockReturnValueOnce({ ok: false, error: 'gmail_api_error' });
+    globalThis.paymentApplyLabel_.mockReturnValueOnce({ ok: false, error: 'gmail_api_error' });
 
     const first = globalThis.approvePaymentReconciliation(approval());
     expect(first).toMatchObject({ ok: false, error: 'gmail_api_error', labelPending: true, sheetRows: [3] });
     expect(payments.cell(3, 16)).toBe('label-pending');
 
-    globalThis._paymentCandidateBoundary.mockImplementation(() => { throw new Error('boundary scan not needed for retry'); });
+    globalThis.paymentCandidateBoundary_.mockImplementation(() => { throw new Error('boundary scan not needed for retry'); });
     const second = globalThis.approvePaymentReconciliation(approval());
     expect(second).toMatchObject({ ok: true, duplicate: true, recovered: true, sheetRows: [3] });
     expect(payments.data).toHaveLength(3);
     expect(payments.cell(3, 16)).toBe('approved');
   });
 
+  test('repairs formulas after a partial sheet initialization failure before labeling', () => {
+    const { payments } = makeFixture();
+    payments.failFormulaWrites = true;
+
+    const first = globalThis.approvePaymentReconciliation(approval());
+    expect(first).toMatchObject({ ok: false, error: 'spreadsheet_write_failed', labelPending: true, sheetRows: [3] });
+    expect(globalThis.paymentApplyLabel_).not.toHaveBeenCalled();
+
+    payments.failFormulaWrites = false;
+    const second = globalThis.approvePaymentReconciliation(approval());
+    expect(second).toMatchObject({ ok: true, duplicate: true, recovered: true, sheetRows: [3] });
+    expect(payments.formula(3, 11)).toContain('SUMIF');
+    expect(payments.formula(3, 12)).toBe('=100-RC[-1]');
+    expect(payments.cell(3, 16)).toBe('approved');
+  });
+
   test('returns an approved duplicate without writing or labeling again', () => {
     const { payments } = makeFixture();
     globalThis.approvePaymentReconciliation(approval());
-    globalThis._paymentApplyLabel.mockClear();
+    globalThis.paymentApplyLabel_.mockClear();
 
     const result = globalThis.approvePaymentReconciliation(approval());
     expect(result).toMatchObject({ ok: true, duplicate: true, recovered: false, sheetRows: [3] });
     expect(payments.data).toHaveLength(3);
-    expect(globalThis._paymentApplyLabel).not.toHaveBeenCalled();
+    expect(globalThis.paymentApplyLabel_).not.toHaveBeenCalled();
   });
 
   test('does not label when the spreadsheet append fails', () => {
@@ -157,7 +175,7 @@ describe('approved payment reconciliation', () => {
     payments.failWrites = true;
     const result = globalThis.approvePaymentReconciliation(approval());
     expect(result).toEqual({ ok: false, error: 'spreadsheet_write_failed' });
-    expect(globalThis._paymentApplyLabel).not.toHaveBeenCalled();
+    expect(globalThis.paymentApplyLabel_).not.toHaveBeenCalled();
   });
 
   test('preserves exceptional manual statuses and reports the skip', () => {
@@ -174,5 +192,26 @@ describe('approved payment reconciliation', () => {
       registrationRow: 3,
       skipped: 'manual_status_preserved',
     }]);
+  });
+
+  test('treats conflicting expected totals as unclear', () => {
+    const { payments, registrations } = makeFixture();
+    payments.data.push(['other', 'KF-AB123', 'Alex Bee', 'alex@example.com', 'they', 5, 'Tent', '', 0, '', 30, 80]);
+
+    const result = globalThis.approvePaymentReconciliation(approval());
+    expect(registrations.cell(2, 7)).toBe('unpaid');
+    expect(result.paymentStatuses).toEqual([{
+      refCode: 'KF-AB123', status: 'unclear', registrationRow: 2, skipped: 'organizer_instruction_required',
+    }]);
+  });
+
+  test('reports an overpayment without changing the automatic status', () => {
+    const { registrations } = makeFixture();
+    const payload = approval();
+    payload.allocations[0].amountCents = 8000;
+
+    const result = globalThis.approvePaymentReconciliation(payload);
+    expect(registrations.cell(2, 7)).toBe('unpaid');
+    expect(result.paymentStatuses[0]).toMatchObject({ status: 'overpaid', skipped: 'organizer_instruction_required' });
   });
 });

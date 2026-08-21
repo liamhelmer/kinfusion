@@ -1,7 +1,7 @@
 # Gmail Payment Reconciliation Design
 
 **Date:** 2026-08-20  
-**Status:** Implemented
+**Status:** Implemented locally; staging rollout pending common Cloud project setup
 **Beads issue:** `kf-q10`
 **Implementation plan:** `docs/superpowers/plans/2026-08-20-payment-reconciliation.md`
 

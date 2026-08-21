@@ -2,7 +2,7 @@
 
 var PAYMENT_RECONCILIATION_LABEL = 'kinfusion-etransfer';
 
-function _paymentProviderQueries() {
+function paymentProviderQueries_() {
   var props = PropertiesService.getScriptProperties();
   var interac = String(props.getProperty('PAYMENT_GMAIL_INTERAC_QUERY') || '').trim();
   var wise = String(props.getProperty('PAYMENT_GMAIL_WISE_QUERY') || '').trim();
@@ -10,9 +10,9 @@ function _paymentProviderQueries() {
   return [interac, wise];
 }
 
-function _paymentListCandidateIds(query, maxResults) {
+function paymentListCandidateIds_(query, maxResults) {
   var boundedQuery = query + ' -label:' + PAYMENT_RECONCILIATION_LABEL;
-  var response = _paymentGmailFetch(
+  var response = paymentGmailFetch_(
     '/messages?q=' + encodeURIComponent(boundedQuery) + '&maxResults=' + maxResults,
     { method: 'get' }
   );
@@ -23,10 +23,10 @@ function _paymentListCandidateIds(query, maxResults) {
   };
 }
 
-function _paymentGetCandidateMessage(messageId) {
-  var response = _paymentGmailFetch('/messages/' + encodeURIComponent(messageId) + '?format=full', { method: 'get' });
+function paymentGetCandidateMessage_(messageId) {
+  var response = paymentGmailFetch_('/messages/' + encodeURIComponent(messageId) + '?format=full', { method: 'get' });
   if (!response.ok) return response;
-  return { ok: true, candidate: _paymentNormalizeCandidate(response.data) };
+  return { ok: true, candidate: paymentNormalizeCandidate_(response.data) };
 }
 
 function scanPaymentGmailCandidates(options) {
@@ -39,13 +39,13 @@ function scanPaymentGmailCandidates(options) {
   if (!Number.isInteger(maxResults)) return { ok: false, error: 'max_results_invalid' };
   maxResults = Math.max(1, Math.min(50, maxResults));
 
-  var queries = _paymentProviderQueries();
+  var queries = paymentProviderQueries_();
   if (!queries) return { ok: false, error: 'payment_gmail_queries_not_configured' };
 
   var ids = [];
   var seen = {};
   for (var i = 0; i < queries.length; i++) {
-    var listed = _paymentListCandidateIds(queries[i], maxResults);
+    var listed = paymentListCandidateIds_(queries[i], maxResults);
     if (!listed.ok) return listed;
     listed.messageIds.forEach(function (id) {
       if (!seen[id] && ids.length < maxResults) {
@@ -58,31 +58,31 @@ function scanPaymentGmailCandidates(options) {
   var candidates = [];
   var errors = [];
   for (var j = 0; j < ids.length; j++) {
-    var fetched = _paymentGetCandidateMessage(ids[j]);
+    var fetched = paymentGetCandidateMessage_(ids[j]);
     if (fetched.ok) candidates.push(fetched.candidate);
     else errors.push({ messageId: ids[j], error: fetched.error || 'message_fetch_failed' });
   }
   return { ok: true, candidates: candidates, errors: errors };
 }
 
-function _paymentCandidateBoundary(messageId) {
+function paymentCandidateBoundary_(messageId) {
   messageId = String(messageId || '').trim();
   if (!messageId) return { ok: false, error: 'message_id_required' };
-  if (typeof _paymentHasPendingMessage === 'function' && _paymentHasPendingMessage(messageId)) {
+  if (typeof paymentHasPendingMessage_ === 'function' && paymentHasPendingMessage_(messageId)) {
     return { ok: true, retry: true };
   }
-  var queries = _paymentProviderQueries();
+  var queries = paymentProviderQueries_();
   if (!queries) return { ok: false, error: 'payment_gmail_queries_not_configured' };
   for (var i = 0; i < queries.length; i++) {
-    var listed = _paymentListCandidateIds(queries[i], 50);
+    var listed = paymentListCandidateIds_(queries[i], 50);
     if (!listed.ok) return listed;
     if (listed.messageIds.indexOf(messageId) !== -1) return { ok: true, retry: false };
   }
   return { ok: false, error: 'message_outside_candidate_boundary' };
 }
 
-function _paymentEnsureLabel() {
-  var listed = _paymentGmailFetch('/labels', { method: 'get' });
+function paymentEnsureLabel_() {
+  var listed = paymentGmailFetch_('/labels', { method: 'get' });
   if (!listed.ok) return listed;
   var labels = listed.data.labels || [];
   for (var i = 0; i < labels.length; i++) {
@@ -90,7 +90,7 @@ function _paymentEnsureLabel() {
       return { ok: true, labelId: labels[i].id };
     }
   }
-  var created = _paymentGmailFetch('/labels', {
+  var created = paymentGmailFetch_('/labels', {
     method: 'post',
     payload: {
       name: PAYMENT_RECONCILIATION_LABEL,
@@ -102,10 +102,10 @@ function _paymentEnsureLabel() {
   return { ok: true, labelId: created.data.id };
 }
 
-function _paymentApplyLabel(messageId) {
-  var label = _paymentEnsureLabel();
+function paymentApplyLabel_(messageId) {
+  var label = paymentEnsureLabel_();
   if (!label.ok) return label;
-  var modified = _paymentGmailFetch('/messages/' + encodeURIComponent(messageId) + '/modify', {
+  var modified = paymentGmailFetch_('/messages/' + encodeURIComponent(messageId) + '/modify', {
     method: 'post',
     payload: { addLabelIds: [label.labelId], removeLabelIds: [] },
   });
@@ -116,9 +116,9 @@ function _paymentApplyLabel(messageId) {
 if (typeof globalThis !== 'undefined') {
   globalThis.scanPaymentGmailCandidates = scanPaymentGmailCandidates;
   globalThis.__kinfusionPaymentGmailBridge = {
-    _paymentGetCandidateMessage: _paymentGetCandidateMessage,
-    _paymentCandidateBoundary: _paymentCandidateBoundary,
-    _paymentEnsureLabel: _paymentEnsureLabel,
-    _paymentApplyLabel: _paymentApplyLabel,
+    paymentGetCandidateMessage_: paymentGetCandidateMessage_,
+    paymentCandidateBoundary_: paymentCandidateBoundary_,
+    paymentEnsureLabel_: paymentEnsureLabel_,
+    paymentApplyLabel_: paymentApplyLabel_,
   };
 }

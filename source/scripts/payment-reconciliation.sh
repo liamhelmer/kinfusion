@@ -18,11 +18,11 @@ shift 2
 # shellcheck source=apps-script-ids.sh
 source "$IDS_FILE"
 case "$ENVIRONMENT" in
-  staging) SCRIPT_ID="$STAGING_SCRIPT_ID" ;;
-  production) SCRIPT_ID="$PROD_SCRIPT_ID" ;;
+  staging) EXECUTION_ID="$STAGING_DEPLOY_ID" ;;
+  production) EXECUTION_ID="$PROD_DEPLOY_ID" ;;
   *) usage ;;
 esac
-[[ -n "$SCRIPT_ID" ]] || { printf 'Apps Script ID is not configured for %s.\n' "$ENVIRONMENT" >&2; exit 2; }
+[[ -n "$EXECUTION_ID" ]] || { printf 'Apps Script API-executable deployment ID is not configured for %s.\n' "$ENVIRONMENT" >&2; exit 2; }
 
 FUNCTION_NAME=''
 PARAMETERS='[]'
@@ -81,7 +81,7 @@ RESULT_FILE="$(mktemp)"
 trap 'rm -f "$RESULT_FILE"' EXIT
 
 gws script scripts run \
-  --params "{\"scriptId\":\"$SCRIPT_ID\"}" \
+  --params "{\"scriptId\":\"$EXECUTION_ID\"}" \
   --json "$REQUEST_BODY" \
   > "$RESULT_FILE"
 

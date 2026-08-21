@@ -11,7 +11,7 @@ function makeProps(initial = {}) {
   };
 }
 
-function installGlobals({ properties = {}, access = false, profileEmail = 'payments@example.com', callbackAccepted = true } = {}) {
+function installGlobals({ properties = {}, access = false, profileEmail = 'payments@example.com', callbackAccepted = true, fetchError = null } = {}) {
   const props = makeProps(properties);
   const params = {};
   const service = {
@@ -38,10 +38,13 @@ function installGlobals({ properties = {}, access = false, profileEmail = 'payme
   globalThis.LockService = { getScriptLock: () => ({}) };
   globalThis.OAuth2 = { createService: vi.fn(() => service) };
   globalThis.UrlFetchApp = {
-    fetch: vi.fn(() => ({
+    fetch: vi.fn(() => {
+      if (fetchError) throw fetchError;
+      return ({
       getResponseCode: () => 200,
       getContentText: () => JSON.stringify({ emailAddress: profileEmail }),
-    })),
+      });
+    }),
   };
   globalThis.HtmlService = {
     createHtmlOutput: (content) => ({ getContent: () => content }),
@@ -101,6 +104,7 @@ describe('payment Gmail OAuth configuration', () => {
         PAYMENT_GMAIL_CLIENT_SECRET: 'client-secret',
         PAYMENT_GMAIL_EXPECTED_ADDRESS: 'payments@example.com',
         PAYMENT_GMAIL_AUTHORIZED_ADDRESS: 'payments@example.com',
+        PAYMENT_GMAIL_AUTHORIZED_CLIENT_ID: 'client-id',
       },
     });
 
@@ -128,6 +132,7 @@ describe('payment Gmail OAuth callback', () => {
     const html = globalThis.paymentGmailAuthCallback({ parameter: { code: 'code' } }).getContent();
 
     expect(props._store.PAYMENT_GMAIL_AUTHORIZED_ADDRESS).toBe('Payments@Example.com');
+    expect(props._store.PAYMENT_GMAIL_AUTHORIZED_CLIENT_ID).toBe('client-id');
     expect(html).toContain('Authorization complete');
     expect(html).not.toContain('never-return-this-token');
   });
@@ -153,17 +158,55 @@ describe('payment Gmail OAuth callback', () => {
   });
 
   test('reports denied consent without storing an address', () => {
-    const { props } = installGlobals({
+    const { props, service } = installGlobals({
       callbackAccepted: false,
       properties: {
         PAYMENT_GMAIL_CLIENT_ID: 'client-id',
         PAYMENT_GMAIL_CLIENT_SECRET: 'client-secret',
         PAYMENT_GMAIL_EXPECTED_ADDRESS: 'payments@example.com',
+        PAYMENT_GMAIL_AUTHORIZED_ADDRESS: 'payments@example.com',
       },
     });
 
     const html = globalThis.paymentGmailAuthCallback({ parameter: { error: 'access_denied' } }).getContent();
     expect(props._store.PAYMENT_GMAIL_AUTHORIZED_ADDRESS).toBeUndefined();
+    expect(service.reset).toHaveBeenCalledOnce();
     expect(html).toContain('Authorization was not completed');
+  });
+
+  test('resets and clears binding when profile verification throws', () => {
+    const { props, service } = installGlobals({
+      access: true,
+      fetchError: new Error('network unavailable'),
+      properties: {
+        PAYMENT_GMAIL_CLIENT_ID: 'client-id',
+        PAYMENT_GMAIL_CLIENT_SECRET: 'client-secret',
+        PAYMENT_GMAIL_EXPECTED_ADDRESS: 'payments@example.com',
+        PAYMENT_GMAIL_AUTHORIZED_ADDRESS: 'payments@example.com',
+      },
+    });
+
+    const html = globalThis.paymentGmailAuthCallback({ parameter: { code: 'code' } }).getContent();
+    expect(service.reset).toHaveBeenCalledOnce();
+    expect(props._store.PAYMENT_GMAIL_AUTHORIZED_ADDRESS).toBeUndefined();
+    expect(html).toContain('Authorization verification failed');
+  });
+
+  test('blocks mailbox fetches until the stored address binding matches', () => {
+    const { service } = installGlobals({
+      access: true,
+      properties: {
+        PAYMENT_GMAIL_CLIENT_ID: 'client-id',
+        PAYMENT_GMAIL_CLIENT_SECRET: 'client-secret',
+        PAYMENT_GMAIL_EXPECTED_ADDRESS: 'payments@example.com',
+        PAYMENT_GMAIL_AUTHORIZED_ADDRESS: 'payments@example.com',
+        PAYMENT_GMAIL_AUTHORIZED_CLIENT_ID: 'old-client-id',
+      },
+    });
+
+    const result = globalThis.__kinfusionPaymentGmailAuth.paymentGmailFetch_('/messages', { method: 'get' });
+    expect(result).toMatchObject({ ok: false, error: 'authorized_account_unverified' });
+    expect(globalThis.UrlFetchApp.fetch).not.toHaveBeenCalled();
+    expect(service.getAccessToken).not.toHaveBeenCalled();
   });
 });

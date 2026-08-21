@@ -11,26 +11,6 @@ function authorizeMailApp() {
   Logger.log('authorizeMailApp: test email sent to ' + to);
 }
 
-// Stores the external OAuth client used only for the separately owned payment
-// mailbox. Pass values manually in the Apps Script editor; never commit them.
-function setupPaymentGmailConfiguration(clientId, clientSecret, expectedAddress) {
-  clientId = String(clientId || '').trim();
-  clientSecret = String(clientSecret || '').trim();
-  expectedAddress = String(expectedAddress || '').trim().toLowerCase();
-  if (!clientId || !clientSecret || !expectedAddress || expectedAddress.indexOf('@') <= 0) {
-    throw new Error('clientId, clientSecret, and a valid expectedAddress are required.');
-  }
-  var props = PropertiesService.getScriptProperties();
-  props.setProperties({
-    PAYMENT_GMAIL_CLIENT_ID: clientId,
-    PAYMENT_GMAIL_CLIENT_SECRET: clientSecret,
-    PAYMENT_GMAIL_EXPECTED_ADDRESS: expectedAddress,
-  });
-  props.deleteProperty('PAYMENT_GMAIL_AUTHORIZED_ADDRESS');
-  Logger.log('Payment Gmail OAuth configuration stored for ' + expectedAddress + '.');
-  return { ok: true, expectedAddress: expectedAddress };
-}
-
 // One-shot setup function. Run once from the Apps Script editor to set script
 // properties and trigger OAuth authorization for all required scopes.
 // Safe to re-run — setProperties overwrites existing values.

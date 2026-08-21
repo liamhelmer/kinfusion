@@ -41,17 +41,24 @@ does not replace or modify the `kinfusion.campout@gmail.com` `gws` login.
 
 1. In the Google Cloud project used for OAuth testing, enable the Gmail API, keep
    the consent audience in Testing, and add the payment mailbox as a test user.
-2. Create a Web application OAuth client. Register this redirect URI for each
+2. Use a standard Google Cloud project for both Apps Script and the `gws` OAuth
+   client. In Apps Script Project Settings, change the GCP project to the
+   `kinfusion-campout` project number. Confirm `gws auth status` reports
+   `project_id: kinfusion-campout`, enable Apps Script API in that project, then
+   run `source/scripts/reauth-gws.sh`.
+3. Create a Web application OAuth client. Register this redirect URI for each
    Apps Script project being used:
 
    ```text
    https://script.google.com/macros/d/{SCRIPT_ID}/usercallback
    ```
 
-3. In the Apps Script editor, call
-   `setupPaymentGmailConfiguration(clientId, clientSecret, expectedAddress)`.
-   Never put those values in source control, shell history, Beads, or a sheet.
-4. Add these two Script Properties. They are fixed Gmail queries, not
+4. In Apps Script Project Settings, add `PAYMENT_GMAIL_CLIENT_ID`,
+   `PAYMENT_GMAIL_CLIENT_SECRET`, and `PAYMENT_GMAIL_EXPECTED_ADDRESS` as Script
+   Properties. Never put those values in source control, shell history, Beads,
+   or a sheet. Run `reset-auth` before changing this configuration; the stored
+   client/address binding also prevents an old grant from being reused.
+5. Add these two Script Properties. They are fixed Gmail queries, not
    agent-supplied input; confirm the genuine provider sender/subject format
    before production use:
 
@@ -60,13 +67,15 @@ does not replace or modify the `kinfusion.campout@gmail.com` `gws` login.
    PAYMENT_GMAIL_WISE_QUERY=newer_than:90d (from:noreply@wise.com OR from:wise.com) (subject:(received) OR subject:(transfer))
    ```
 
-5. Push and deploy Apps Script, then request the owner link with:
+6. Push and deploy Apps Script as an API executable. The command facade uses the
+   `*_DEPLOY_ID` value, not the Apps Script project ID. Then request the owner
+   link with:
 
    ```bash
    source/scripts/payment-reconciliation.sh staging auth-url
    ```
 
-6. After consent, verify `expectedAddress` equals `authorizedAddress` in:
+7. After consent, verify `expectedAddress` equals `authorizedAddress` in:
 
    ```bash
    source/scripts/payment-reconciliation.sh staging status
@@ -93,10 +102,10 @@ append a duplicate Gmail message group.
 
 ### End-of-event teardown
 
-Run `source/scripts/payment-reconciliation.sh production reset-auth`, delete the
-five `PAYMENT_GMAIL_*` configuration properties and OAuth2 service state from
-Script Properties, and have the mailbox owner revoke the app in their Google
-Account security settings.
+Run `source/scripts/payment-reconciliation.sh production reset-auth`, delete all
+`PAYMENT_GMAIL_*` properties and OAuth2 service state from Script Properties,
+and have the mailbox owner revoke the app in their Google Account security
+settings.
 
 ## Spreadsheet
 

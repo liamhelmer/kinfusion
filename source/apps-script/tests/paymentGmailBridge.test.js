@@ -3,8 +3,8 @@ import '../paymentHelpers.js';
 import '../paymentGmailBridge.js';
 
 function installBridge(fetchImpl, properties = {}) {
-  globalThis._paymentGmailFetch = vi.fn(fetchImpl);
-  globalThis._paymentNormalizeCandidate = globalThis.__kinfusionPaymentHelpers._paymentNormalizeCandidate;
+  globalThis.paymentGmailFetch_ = vi.fn(fetchImpl);
+  globalThis.paymentNormalizeCandidate_ = globalThis.__kinfusionPaymentHelpers.paymentNormalizeCandidate_;
   globalThis.PropertiesService = {
     getScriptProperties: () => ({ getProperty: (key) => properties[key] ?? null }),
   };
@@ -31,7 +31,7 @@ const queries = {
 };
 
 beforeEach(() => {
-  delete globalThis._paymentHasPendingMessage;
+  delete globalThis.paymentHasPendingMessage_;
 });
 
 describe('payment Gmail candidate scan', () => {
@@ -51,7 +51,7 @@ describe('payment Gmail candidate scan', () => {
 
     expect(result.ok).toBe(true);
     expect(result.candidates.map((item) => item.messageId)).toEqual(['a', 'shared', 'b']);
-    const listPaths = globalThis._paymentGmailFetch.mock.calls.slice(0, 2).map((call) => decodeURIComponent(call[0]));
+    const listPaths = globalThis.paymentGmailFetch_.mock.calls.slice(0, 2).map((call) => decodeURIComponent(call[0]));
     expect(listPaths).toEqual([
       '/messages?q=from:notify@interac.ca subject:(deposit) -label:kinfusion-etransfer&maxResults=10',
       '/messages?q=from:wise.com subject:(received) -label:kinfusion-etransfer&maxResults=10',
@@ -82,7 +82,7 @@ describe('payment Gmail candidate boundary and label', () => {
       throw new Error(`unexpected ${path}`);
     }, queries);
 
-    expect(globalThis.__kinfusionPaymentGmailBridge._paymentCandidateBoundary('other')).toEqual({
+    expect(globalThis.__kinfusionPaymentGmailBridge.paymentCandidateBoundary_('other')).toEqual({
       ok: false,
       error: 'message_outside_candidate_boundary',
     });
@@ -90,8 +90,8 @@ describe('payment Gmail candidate boundary and label', () => {
 
   test('allows a recorded label-pending message through the retry boundary', () => {
     installBridge(() => { throw new Error('Gmail search should not run'); }, queries);
-    globalThis._paymentHasPendingMessage = (id) => id === 'pending';
-    expect(globalThis.__kinfusionPaymentGmailBridge._paymentCandidateBoundary('pending')).toEqual({ ok: true, retry: true });
+    globalThis.paymentHasPendingMessage_ = (id) => id === 'pending';
+    expect(globalThis.__kinfusionPaymentGmailBridge.paymentCandidateBoundary_('pending')).toEqual({ ok: true, retry: true });
   });
 
   test('creates the exact reconciliation label and applies it', () => {
@@ -102,12 +102,12 @@ describe('payment Gmail candidate boundary and label', () => {
       throw new Error(`unexpected ${path}`);
     }, queries);
 
-    expect(globalThis.__kinfusionPaymentGmailBridge._paymentApplyLabel('msg-1')).toEqual({
+    expect(globalThis.__kinfusionPaymentGmailBridge.paymentApplyLabel_('msg-1')).toEqual({
       ok: true,
       messageId: 'msg-1',
       labelId: 'Label_42',
     });
-    expect(globalThis._paymentGmailFetch).toHaveBeenLastCalledWith('/messages/msg-1/modify', {
+    expect(globalThis.paymentGmailFetch_).toHaveBeenLastCalledWith('/messages/msg-1/modify', {
       method: 'post',
       payload: { addLabelIds: ['Label_42'], removeLabelIds: [] },
     });
