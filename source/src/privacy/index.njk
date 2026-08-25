@@ -1,0 +1,30 @@
+---
+title: "Privacy Policy"
+layout: base.njk
+description: "How Kin-Fusion Campout handles registration and payment-reconciliation data, including Google Gmail data."
+---
+<div class="container">
+  <h1>Privacy Policy</h1>
+  <p><strong>Last updated: August 24, 2026</strong></p>
+
+  <p>Kin-Fusion Campout uses personal information to administer the 2026 event, including registrations and payment reconciliation. This policy explains what we access, why we access it, and the choices available to you.</p>
+
+  <h2>Google Gmail data used for payment reconciliation</h2>
+  <p>With the mailbox owner's permission, the KinFusion Payments app accesses Gmail only to locate and review Interac e-Transfer and Wise payment notifications associated with Kin-Fusion Campout. It uses the <code>gmail.modify</code> permission to read relevant message content and metadata and to apply or remove labels.</p>
+  <p>The app uses payment notification evidence—including payer details, amount, currency, date, reference code, and message—to match payments with attendee registrations and record reconciliation and audit details in an organizer-controlled Google Sheet. Ambiguous, combined, partial, unmatched, unclear-balance, and overpayment cases are held for human review.</p>
+  <p>After an organizer reviews and approves an exact allocation, the app applies the <code>kinfusion-etransfer</code> label to the source message. It does not send email, delete messages, open attachments, or follow instructions or links contained in payment messages.</p>
+
+  <h2>Storage and retention</h2>
+  <p>OAuth client configuration and access or refresh tokens are stored in Google Apps Script properties. Payment reconciliation records are stored in the organizer-controlled Google Sheet. Source messages remain in the mailbox owner's Gmail account and are not copied into a separate email archive by the app.</p>
+  <p>Registration personal information is scheduled for deletion by December 12, 2026, 90 days after the event, except for payment and audit records that must be kept longer for event financial or accounting obligations. Those records are retained only as long as needed for those obligations. The mailbox owner remains in control of source messages and can remove the app's label at any time.</p>
+
+  <h2>Sharing and use restrictions</h2>
+  <p>Google user data is available only to authorized Kin-Fusion organizers and the Google services needed to operate the reconciliation workflow. We do not sell it, use it for advertising, or share it for unrelated purposes. We do not collect the mailbox owner's Google password, and OAuth tokens are never exposed to event attendees.</p>
+  <p>KinFusion Payments' use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including its Limited Use requirements.</p>
+
+  <h2>Your choices</h2>
+  <p>The mailbox owner can revoke the app's Google access at any time from <a href="https://myaccount.google.com/permissions">Google Account third-party access settings</a>. To request deletion of app-held Google user data, removal of reconciliation records where legally permitted, or help removing labels, email <a href="mailto:hello@kinfusion.dance">hello@kinfusion.dance</a>.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about this policy can be sent to <a href="mailto:hello@kinfusion.dance">hello@kinfusion.dance</a>.</p>
+</div>
