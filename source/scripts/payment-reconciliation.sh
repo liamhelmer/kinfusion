@@ -6,7 +6,7 @@ REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 IDS_FILE="$REPO_DIR/scripts/apps-script-ids.sh"
 
 usage() {
-  printf 'Usage: %s <staging|production> <status|auth-url|scan|approve|setup-sheet|reset-auth> [argument]\n' "$0" >&2
+  printf 'Usage: %s <staging|production> <status|auth-url|invite|scan|approve|setup-sheet|reset-auth> [argument]\n' "$0" >&2
   exit 2
 }
 
@@ -31,9 +31,15 @@ case "$COMMAND" in
     [[ $# -eq 0 ]] || usage
     FUNCTION_NAME='getPaymentGmailAuthStatus'
     ;;
-  auth-url)
+  auth-url|invite)
     [[ $# -eq 0 ]] || usage
-    FUNCTION_NAME='getPaymentGmailAuthorizationUrl'
+    FUNCTION_NAME='createPaymentGmailAuthorizationInvite'
+    if [[ "$ENVIRONMENT" == "staging" ]]; then
+      DEPLOY_URL="${STAGING_DEPLOY_URL:-}"
+    else
+      DEPLOY_URL="${PROD_DEPLOY_URL:-}"
+    fi
+    [[ -n "$DEPLOY_URL" ]] || { printf 'Web-app deployment URL is not configured for %s.\n' "$ENVIRONMENT" >&2; exit 2; }
     ;;
   scan)
     [[ $# -le 1 ]] || usage
@@ -86,7 +92,7 @@ gws script scripts run \
   > "$RESULT_FILE"
 
 python3 -c '
-import json,sys
+import json,sys,urllib.parse
 data=json.load(open(sys.argv[1], encoding="utf-8"))
 if data.get("error"):
     print(json.dumps({"ok":False,"error":"apps_script_execution_failed"}, separators=(",",":"), sort_keys=True))
@@ -95,5 +101,12 @@ response=data.get("response", {})
 if response.get("error"):
     print(json.dumps({"ok":False,"error":"apps_script_function_failed","details":response["error"]}, separators=(",",":"), sort_keys=True))
     raise SystemExit(1)
-print(json.dumps(response.get("result"), separators=(",",":"), sort_keys=True))
-' "$RESULT_FILE"
+result=response.get("result")
+if sys.argv[2] in ("invite", "auth-url") and isinstance(result, dict) and result.get("ok"):
+    token=result.pop("inviteToken", "")
+    if not token:
+        print(json.dumps({"ok":False,"error":"invite_token_missing"}, separators=(",",":"), sort_keys=True))
+        raise SystemExit(1)
+    result["authorizationInviteUrl"]=sys.argv[3] + "?paymentAuth=1&invite=" + urllib.parse.quote(token, safe="")
+print(json.dumps(result, separators=(",",":"), sort_keys=True))
+' "$RESULT_FILE" "$COMMAND" "${DEPLOY_URL:-}"

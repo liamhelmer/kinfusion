@@ -11,7 +11,11 @@ FAKE_GWS="$FAKE_BIN/gws"
 printf '%s\n' \
   '#!/bin/bash' \
   'printf "%s\n" "$@" > "$PAYMENT_TEST_CAPTURE"' \
-  'printf "%s\n" '\''{"response":{"result":{"ok":true,"authorized":false}}}'\''' \
+  'if [[ "$*" == *createPaymentGmailAuthorizationInvite* ]]; then' \
+  '  printf "%s\n" '\''{"response":{"result":{"ok":true,"expectedAddress":"payments@example.com","inviteToken":"invite-token","expiresAt":"2026-08-25T04:00:00.000Z"}}}'\''' \
+  'else' \
+  '  printf "%s\n" '\''{"response":{"result":{"ok":true,"authorized":false}}}'\''' \
+  'fi' \
   > "$FAKE_GWS"
 chmod 700 "$FAKE_GWS"
 
@@ -36,6 +40,15 @@ fi
 assert_capture '"function":"scanPaymentGmailCandidates"'
 assert_capture '"parameters":[{"maxResults":7}]'
 assert_capture 'AKfycbw3loeDIxVO4Z03zhB0CeaH4XIWOHvusYmGQAyC_SNcNiXYzuO-aPvN_-kiEZgC3spr'
+
+invite_output=$("$SCRIPT_DIR/payment-reconciliation.sh" production invite)
+[[ "$invite_output" == *'"authorizationInviteUrl":"https://script.google.com/macros/s/AKfycbw3loeDIxVO4Z03zhB0CeaH4XIWOHvusYmGQAyC_SNcNiXYzuO-aPvN_-kiEZgC3spr/exec?paymentAuth=1&invite=invite-token"'* ]] || fail "invite URL was not assembled from the production web-app deployment"
+[[ "$invite_output" != *'"inviteToken"'* ]] || fail "raw invite token field was returned separately"
+assert_capture '"function":"createPaymentGmailAuthorizationInvite"'
+
+legacy_invite_output=$("$SCRIPT_DIR/payment-reconciliation.sh" production auth-url)
+[[ "$legacy_invite_output" == *'"authorizationInviteUrl"'* ]] || fail "legacy auth-url command did not safely alias to invite"
+[[ "$legacy_invite_output" != *'"inviteToken"'* ]] || fail "legacy auth-url leaked a standalone invite token"
 
 payload="$TEST_TMP/approval.json"
 printf '%s\n' '{"messageId":"msg-1","receivedAt":"2026-08-20T15:00:00Z","allocations":[{"refCode":"KF-A","amountCents":100,"notes":""}]}' > "$payload"

@@ -2,7 +2,7 @@
  * DJ signup handler.
  * Lock is already held by gateway.js when this function is called.
  */
-function handleDJSignup(payload) {
+function handleDJSignup_(payload) {
   var props = PropertiesService.getScriptProperties();
   var sheetId = props.getProperty('SHEET_ID');
   var fromEmail = props.getProperty('FROM_EMAIL');
@@ -11,7 +11,7 @@ function handleDJSignup(payload) {
     return { ok: false, code: 'MISCONFIGURED' };
   }
 
-  var refCode = generateRefCode();
+  var refCode = generateRefCode_();
   var timestamp = new Date().toISOString();
 
   var ss = SpreadsheetApp.openById(sheetId);
@@ -50,7 +50,7 @@ function handleDJSignup(payload) {
     MailApp.sendEmail(payload.email, subject, plainBody, {
       from: fromEmail,
       replyTo: 'hello@kinfusion.dance',
-      htmlBody: buildDJEmailHtml(payload.djName, refCode),
+      htmlBody: buildDJEmailHtml_(payload.djName, refCode),
       name: 'Kin-Fusion Campout',
     });
   } catch (mailErr) {

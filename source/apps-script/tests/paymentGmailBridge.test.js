@@ -3,6 +3,7 @@ import '../paymentHelpers.js';
 import '../paymentGmailBridge.js';
 
 function installBridge(fetchImpl, properties = {}) {
+  globalThis.assertController_ = vi.fn();
   globalThis.paymentGmailFetch_ = vi.fn(fetchImpl);
   globalThis.paymentNormalizeCandidate_ = globalThis.__kinfusionPaymentHelpers.paymentNormalizeCandidate_;
   globalThis.PropertiesService = {
@@ -35,6 +36,13 @@ beforeEach(() => {
 });
 
 describe('payment Gmail candidate scan', () => {
+  test('requires controller access before reading Gmail', () => {
+    installBridge(() => { throw new Error('must not fetch'); }, queries);
+    globalThis.assertController_ = vi.fn(() => { throw new Error('controller_access_required'); });
+    expect(() => globalThis.scanPaymentGmailCandidates({})).toThrow('controller_access_required');
+    expect(globalThis.paymentGmailFetch_).not.toHaveBeenCalled();
+  });
+
   test('uses only fixed configured queries, excludes labeled mail, and deduplicates IDs', () => {
     installBridge((path) => {
       if (path.includes('/messages?') && decodeURIComponent(path).includes('interac')) {

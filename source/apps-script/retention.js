@@ -21,8 +21,8 @@ var OPERATIONAL_TABS = ['Registrations', 'UnconferenceProposals', 'DJSignups'];
 var ARCHIVE_TAB_NAME = 'KinFusion-2026-Archive';
 var RETENTION_COMPLETED_PROP = 'RETENTION_COMPLETED_AT';
 
-function runRetentionCheck() {
-  return _runRetentionCheck(new Date(), DELETE_AFTER_DATE);
+function runRetentionCheck_() {
+  return runRetentionCheckInternal_(new Date(), DELETE_AFTER_DATE);
 }
 
 /**
@@ -30,7 +30,7 @@ function runRetentionCheck() {
  * @param {Date} now - current date (injected for tests)
  * @param {Date} deleteAfter - deletion threshold date (injected for tests)
  */
-function _runRetentionCheck(now, deleteAfter) {
+function runRetentionCheckInternal_(now, deleteAfter) {
   if (now < deleteAfter) {
     Logger.log('retention: not yet due (due ' + Utilities.formatDate(deleteAfter, 'UTC', 'yyyy-MM-dd') + ')');
     return { action: 'noop', reason: 'before_delete_date' };
@@ -159,19 +159,22 @@ function _runRetentionCheck(now, deleteAfter) {
  * Idempotent — safe to run multiple times.
  */
 function installRetentionTrigger() {
+  assertController_();
   var triggers = ScriptApp.getProjectTriggers();
+  var installed = false;
   for (var i = 0; i < triggers.length; i++) {
-    if (triggers[i].getHandlerFunction() === 'runRetentionCheck') {
-      Logger.log('installRetentionTrigger: trigger already installed');
-      return;
-    }
+    var handler = triggers[i].getHandlerFunction();
+    if (handler === 'runRetentionCheck_') installed = true;
+    if (handler === 'runRetentionCheck') ScriptApp.deleteTrigger(triggers[i]);
   }
   // Note: Apps Script triggers run in the project timezone, not necessarily UTC.
   // Configure the project timezone to UTC (File -> Project settings -> Time zone) for predictable scheduling.
-  ScriptApp.newTrigger('runRetentionCheck')
-    .timeBased()
-    .everyDays(1)
-    .atHour(2)
-    .create();
-  Logger.log('installRetentionTrigger: daily hour-2 trigger installed (runs in project timezone)');
+  if (!installed) {
+    ScriptApp.newTrigger('runRetentionCheck_')
+      .timeBased()
+      .everyDays(1)
+      .atHour(2)
+      .create();
+  }
+  Logger.log('installRetentionTrigger: private daily trigger installed (runs in project timezone)');
 }

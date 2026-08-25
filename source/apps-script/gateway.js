@@ -16,7 +16,7 @@ function doPost(e) {
     var nonceCacheMin = parseInt(props.getProperty('NONCE_CACHE_MIN') || '10', 10);
 
     if (!hmacKey) {
-      return jsonResponse({ ok: false, code: 'MISCONFIGURED' });
+      return jsonResponse_({ ok: false, code: 'MISCONFIGURED' });
     }
 
     var timestamp = body._ts;
@@ -24,14 +24,14 @@ function doPost(e) {
     var signature = body._sig;
 
     if (!timestamp || !nonce || !signature) {
-      return jsonResponse({ ok: false, code: 'HMAC_MISSING' });
+      return jsonResponse_({ ok: false, code: 'HMAC_MISSING' });
     }
 
     // Clock skew check — reject if |serverTime - ts| > 5 minutes
     var serverTime = Date.now();
     var requestTime = parseInt(timestamp, 10);
     if (Math.abs(serverTime - requestTime) > 5 * 60 * 1000) {
-      return jsonResponse({ ok: false, code: 'CLOCK_SKEW' });
+      return jsonResponse_({ ok: false, code: 'CLOCK_SKEW' });
     }
 
     // Build canonical payload (exclude transport fields _ts, _nonce, _sig)
@@ -68,14 +68,14 @@ function doPost(e) {
 
     if (expectedSig !== signature) {
       Logger.log('HMAC mismatch for nonce: ' + nonce);
-      return jsonResponse({ ok: false, code: 'HMAC_INVALID' });
+      return jsonResponse_({ ok: false, code: 'HMAC_INVALID' });
     }
 
     // Nonce replay check (CacheService, 10-minute TTL)
     var cache = CacheService.getScriptCache();
     var nonceKey = 'nonce:' + nonce;
     if (cache.get(nonceKey)) {
-      return jsonResponse({ ok: false, code: 'REPLAY' });
+      return jsonResponse_({ ok: false, code: 'REPLAY' });
     }
     cache.put(nonceKey, '1', nonceCacheMin * 60);
 
@@ -86,12 +86,12 @@ function doPost(e) {
       lock.waitLock(10000);
       lockAcquired = true;
     } catch (lockErr) {
-      return jsonResponse({ ok: false, code: 'BUSY' });
+      return jsonResponse_({ ok: false, code: 'BUSY' });
     }
 
     try {
-      var result = dispatchForm(body.form, payloadFields);
-      return jsonResponse(result);
+      var result = dispatchForm_(body.form, payloadFields);
+      return jsonResponse_(result);
     } finally {
       if (lockAcquired) {
         lock.releaseLock();
@@ -99,20 +99,20 @@ function doPost(e) {
     }
   } catch (err) {
     Logger.log('gateway error: ' + err.message + '\n' + (err.stack || ''));
-    return jsonResponse({ ok: false, code: 'INTERNAL_ERROR' });
+    return jsonResponse_({ ok: false, code: 'INTERNAL_ERROR' });
   }
 }
 
-function dispatchForm(form, payload) {
+function dispatchForm_(form, payload) {
   switch (form) {
-    case 'register':     return handleRegister(payload);
-    case 'unconference': return handleUnconference(payload);
-    case 'dj-signup':    return handleDJSignup(payload);
+    case 'register':     return handleRegister_(payload);
+    case 'unconference': return handleUnconference_(payload);
+    case 'dj-signup':    return handleDJSignup_(payload);
     default:             return { ok: false, code: 'UNKNOWN_FORM' };
   }
 }
 
-function jsonResponse(data) {
+function jsonResponse_(data) {
   return ContentService.createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
 }

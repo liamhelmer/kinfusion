@@ -2,6 +2,7 @@
 // If a permissions dialog appears, click through and allow all scopes.
 // After it succeeds, form submission emails will work.
 function authorizeMailApp() {
+  assertController_();
   var props = PropertiesService.getScriptProperties();
   var to = props.getProperty('ORGANIZER_EMAIL') || props.getProperty('FROM_EMAIL');
   if (!to) {
@@ -15,6 +16,7 @@ function authorizeMailApp() {
 // properties and trigger OAuth authorization for all required scopes.
 // Safe to re-run — setProperties overwrites existing values.
 function setupProperties() {
+  assertController_();
   var props = PropertiesService.getScriptProperties();
   props.setProperties({
     'HMAC_KEY': '43feaee7d84a2a7202cbce94de8c3a28d60e1f2732087dbe4b2436bcaa748ef4',
@@ -32,6 +34,7 @@ function setupProperties() {
 // Run once from the editor after pointing SHEET_ID at a new blank spreadsheet.
 // Safe to re-run — skips tabs that already exist.
 function setupSpreadsheet() {
+  assertController_();
   var props = PropertiesService.getScriptProperties();
   var sheetId = props.getProperty('SHEET_ID');
   if (!sheetId) throw new Error('SHEET_ID not set. Run setupProperties() first.');

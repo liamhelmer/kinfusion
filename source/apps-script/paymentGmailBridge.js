@@ -30,6 +30,7 @@ function paymentGetCandidateMessage_(messageId) {
 }
 
 function scanPaymentGmailCandidates(options) {
+  assertController_();
   options = options || {};
   var keys = Object.keys(options);
   for (var k = 0; k < keys.length; k++) {

@@ -107,7 +107,7 @@ The `retention.js` Apps Script trigger handles this automatically:
 
 The `DELETE_AFTER_DATE` constant in `retention.js` is `2026-12-12T00:00:00Z`. Do not modify this value.
 
-Manual verification: check the Archive sheet on or after 2026-12-12 to confirm deletion ran. If not: open Apps Script editor → Triggers → verify daily trigger `runRetentionCheck` is active, then run it manually.
+Manual verification: check the Archive sheet on or after 2026-12-12 to confirm deletion ran. If not: open Apps Script editor → Triggers → verify daily trigger `runRetentionCheck_` is active, then run it manually.
 
 ---
 
@@ -132,7 +132,9 @@ Per the architecture decision:
 - The site does NOT process payments on-site
 - No payment card data, bank routing numbers, or CVV data are collected or stored
 - Payment occurs out-of-band via Interac e-transfer or Wyse, per organizer instructions to accepted applicants
-- The Apps Script Web App URL is never exposed to clients; only the Worker holds it
+- The registration-facing site does not expose the Apps Script Web App URL;
+  only a short-lived guarded authorization invite is shared directly with the
+  payment-mailbox owner
 - Detailed internal errors are never surfaced to clients — only generic error codes
 
 ---
@@ -235,8 +237,9 @@ Gmail or Sheets mutation commands for reconciliation.
   `source/scripts/reauth-gws.sh` so the control token has every manifest scope.
 - [ ] Enable Gmail API in the OAuth test project.
 - [ ] Add the payment mailbox as an OAuth test user.
-- [ ] Create a Web OAuth client and register
-  `https://script.google.com/macros/d/{STAGING_SCRIPT_ID}/usercallback`.
+- [ ] Create a Web OAuth client and register the staging web-app URL
+  `https://script.google.com/macros/s/{STAGING_DEPLOY_ID}/exec` under
+  **Authorized redirect URIs**.
 - [ ] Confirm Apps Script OAuth2 library version 43 is present.
 - [ ] In Apps Script Project Settings → Script Properties, add
   `PAYMENT_GMAIL_CLIENT_ID`, `PAYMENT_GMAIL_CLIENT_SECRET`, and
@@ -249,8 +252,10 @@ Gmail or Sheets mutation commands for reconciliation.
   `STAGING_DEPLOY_ID` in `apps-script-ids.sh` matches it. The Execution API
   accepts the deployment ID, not `STAGING_SCRIPT_ID`.
 - [ ] `source/scripts/payment-reconciliation.sh staging setup-sheet`.
-- [ ] `source/scripts/payment-reconciliation.sh staging auth-url`; send only the
-  returned Google URL to the mailbox owner.
+- [ ] `source/scripts/payment-reconciliation.sh staging invite`; send only the
+  returned `authorizationInviteUrl` to the mailbox owner. The invite expires in
+  30 minutes, starts OAuth in the owner's Google session, and does not require a
+  KinFusion account login.
 - [ ] After consent, run the staging `status` command and verify the expected and
   authorized addresses match.
 - [ ] Verify a direct `scripts.run` attempt against a trailing-underscore helper
@@ -276,20 +281,22 @@ and `kinfusion-etransfer` label result.
 
 ### Recovery
 
-- `authorization_required`: send the returned authorization link and stop until
-  the owner consents. Testing grants normally require this every seven days.
+- `authorization_required`: run the environment's `invite` command, send only
+  its `authorizationInviteUrl`, and stop until the owner consents. Testing
+  grants normally require this every seven days.
 - `labelPending: true`: report `gmailLabeled`, then rerun the exact approved
   payload. Existing rows are reused and move from `label-pending` to `approved`;
   `gmailLabeled: true` means Gmail succeeded but sheet finalization still needs
   recovery.
 - `duplicate: true`: report existing rows; do not create another payment.
 - Spreadsheet failure: Gmail remains unlabeled. Investigate before retrying.
-- Wrong account: the callback clears the grant; generate a new link for the
+- Wrong account: the callback clears the grant; generate a new invite for the
   configured expected address.
 
 ### Production and teardown
 
-- [ ] Repeat the OAuth redirect/configuration steps for `PROD_SCRIPT_ID`.
+- [ ] Register `https://script.google.com/macros/s/{PROD_DEPLOY_ID}/exec` as an
+  authorized redirect URI and repeat the remaining OAuth configuration steps.
 - [ ] Push production only after staging checks pass.
 - [ ] Run production `setup-sheet`, then verify hidden audit columns M:P in
   `Pmts Received`.

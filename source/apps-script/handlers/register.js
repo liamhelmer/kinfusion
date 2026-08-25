@@ -20,7 +20,7 @@ var ACCOMMODATION_LABELS = {
 };
 var TIER_LABELS = { 300: 'Community/solidarity rate', 350: 'Standard rate', 400: 'Sustainer rate' };
 
-function calcRegistrationPricing(payload) {
+function calcRegistrationPricing_(payload) {
   var tier = parseInt(payload.tier) || 350;
   var accommodation = payload.accommodation || 'camping';
   var arrivalNum = ARRIVAL_DAY_NUMS[payload.arrivalDay] !== undefined ? ARRIVAL_DAY_NUMS[payload.arrivalDay] : 1;
@@ -45,7 +45,7 @@ function calcRegistrationPricing(payload) {
   };
 }
 
-function handleRegister(payload) {
+function handleRegister_(payload) {
   var props = PropertiesService.getScriptProperties();
   var sheetId = props.getProperty('SHEET_ID');
   var fromEmail = props.getProperty('FROM_EMAIL');
@@ -55,9 +55,9 @@ function handleRegister(payload) {
     return { ok: false, code: 'MISCONFIGURED' };
   }
 
-  var refCode = generateRefCode();
+  var refCode = generateRefCode_();
   var timestamp = new Date().toISOString();
-  var pricing = calcRegistrationPricing(payload);
+  var pricing = calcRegistrationPricing_(payload);
   var children = Array.isArray(payload.children) ? payload.children : [];
 
   var ss = SpreadsheetApp.openById(sheetId);
@@ -195,7 +195,7 @@ function handleRegister(payload) {
     MailApp.sendEmail(payload.email, subject, plainBody, {
       from: fromEmail,
       replyTo: 'hello@kinfusion.dance',
-      htmlBody: buildRegistrationEmailHtml(emailData),
+      htmlBody: buildRegistrationEmailHtml_(emailData),
       name: 'Kin-Fusion Campout',
     });
   } catch (mailErr) {

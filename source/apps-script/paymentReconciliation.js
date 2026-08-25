@@ -52,6 +52,7 @@ function paymentEnsureAuditColumns_(sheet) {
 }
 
 function setupPaymentReconciliationSheet() {
+  assertController_();
   try {
     var ss = paymentOpenSpreadsheet_();
     var sheet = ss.getSheetByName(PAYMENT_SHEET_NAME);
@@ -239,6 +240,7 @@ function paymentHasPendingMessage_(messageId) {
 }
 
 function approvePaymentReconciliation(rawPayload) {
+  assertController_();
   var validation = paymentValidateAllocations_(rawPayload);
   if (!validation.ok) return validation;
   var payload = validation.value;

@@ -4,7 +4,7 @@
  */
 
 // ADR R6.3: KF-XXXXX (5 alphanumeric [A-Z0-9] chars)
-function generateRefCode() {
+function generateRefCode_() {
   var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   var code = 'KF-';
   for (var i = 0; i < 5; i++) {
@@ -27,7 +27,7 @@ function generateRefCode() {
  * @param {number} data.gst
  * @param {number} data.total
  */
-function buildRegistrationEmailHtml(data) {
+function buildRegistrationEmailHtml_(data) {
   var template = HtmlService.createTemplateFromFile('register-confirmation');
   template.name = data.name || 'there';
   template.refCode = data.refCode || '';
@@ -44,7 +44,7 @@ function buildRegistrationEmailHtml(data) {
   return template.evaluate().getContent();
 }
 
-function buildUnconferenceEmailHtml(name, workshopTitle, refCode) {
+function buildUnconferenceEmailHtml_(name, workshopTitle, refCode) {
   var template = HtmlService.createTemplateFromFile('unconference-confirmation');
   template.name = name || 'there';
   template.workshopTitle = workshopTitle || '';
@@ -52,7 +52,7 @@ function buildUnconferenceEmailHtml(name, workshopTitle, refCode) {
   return template.evaluate().getContent();
 }
 
-function buildDJEmailHtml(name, refCode) {
+function buildDJEmailHtml_(name, refCode) {
   var template = HtmlService.createTemplateFromFile('dj-confirmation');
   template.name = name || 'there';
   template.refCode = refCode;

@@ -58,6 +58,7 @@ const auditHeaders = ['Gmail Message ID', 'Gmail Received At', 'Reconciled At', 
 const registrationHeaders = ['RefCode', 'FullName', 'Email', 'Pronouns', 'Accommodation', 'Donation', 'PaymentStatus'];
 
 function makeFixture({ paymentSheetMissing = false } = {}) {
+  globalThis.assertController_ = vi.fn();
   const payments = paymentSheetMissing ? null : new FakeSheet('Pmts Received', [
     paymentHeaders,
     ['old', 'KF-AB123', 'Alex Bee', 'alex@example.com', 'they', 25, 'Tent', '', 0, '', 25, 75],
@@ -85,7 +86,7 @@ function makeFixture({ paymentSheetMissing = false } = {}) {
   };
   const lock = { waitLock: vi.fn(), releaseLock: vi.fn() };
   globalThis.PropertiesService = { getScriptProperties: () => ({ getProperty: () => 'sheet-id' }) };
-  globalThis.SpreadsheetApp = { openById: () => spreadsheet, flush: vi.fn() };
+  globalThis.SpreadsheetApp = { openById: vi.fn(() => spreadsheet), flush: vi.fn() };
   globalThis.LockService = { getScriptLock: () => lock };
   globalThis.paymentValidateAllocations_ = globalThis.__kinfusionPaymentHelpers.paymentValidateAllocations_;
   globalThis.paymentCompareBalance_ = globalThis.__kinfusionPaymentHelpers.paymentCompareBalance_;
@@ -104,6 +105,13 @@ const approval = () => ({
 beforeEach(() => vi.useFakeTimers().setSystemTime(new Date('2026-08-21T01:02:03.000Z')));
 
 describe('payment reconciliation sheet setup', () => {
+  test('requires controller access before changing the sheet', () => {
+    makeFixture();
+    globalThis.assertController_ = vi.fn(() => { throw new Error('controller_access_required'); });
+    expect(() => globalThis.setupPaymentReconciliationSheet()).toThrow('controller_access_required');
+    expect(globalThis.SpreadsheetApp.openById).not.toHaveBeenCalled();
+  });
+
   test('creates the canonical payment sheet once when it is missing', () => {
     const { spreadsheet, sheets } = makeFixture({ paymentSheetMissing: true });
 

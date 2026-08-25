@@ -46,12 +46,16 @@ does not replace or modify the `kinfusion.campout@gmail.com` `gws` login.
    `kinfusion-campout` project number. Confirm `gws auth status` reports
    `project_id: kinfusion-campout`, enable Apps Script API in that project, then
    run `source/scripts/reauth-gws.sh`.
-3. Create a Web application OAuth client. Register this redirect URI for each
-   Apps Script project being used:
+3. Create a Web application OAuth client. Register the deployed web-app URL for
+   each Apps Script environment under **Authorized redirect URIs**:
 
    ```text
-   https://script.google.com/macros/d/{SCRIPT_ID}/usercallback
+   https://script.google.com/macros/s/{DEPLOYMENT_ID}/exec
    ```
+
+   The mailbox-owner flow returns through the public web app so an external
+   Google Workspace account does not depend on Apps Script's `/usercallback`
+   state-token handling.
 
 4. In Apps Script Project Settings, add `PAYMENT_GMAIL_CLIENT_ID`,
    `PAYMENT_GMAIL_CLIENT_SECRET`, and `PAYMENT_GMAIL_EXPECTED_ADDRESS` as Script
@@ -67,13 +71,20 @@ does not replace or modify the `kinfusion.campout@gmail.com` `gws` login.
    PAYMENT_GMAIL_WISE_QUERY=newer_than:90d (from:noreply@wise.com OR from:wise.com) (subject:(received) OR subject:(transfer))
    ```
 
-6. Push and deploy Apps Script as an API executable. The command facade uses the
-   `*_DEPLOY_ID` value, not the Apps Script project ID. Then request the owner
-   link with:
+6. Push and deploy Apps Script as both an API executable and an
+   `ANYONE_ANONYMOUS` web app that executes as the deploying user. The command
+   facade uses the `*_DEPLOY_ID` value, not the Apps Script project ID. Then
+   create a 30-minute, single-mailbox owner invitation with:
 
    ```bash
-   source/scripts/payment-reconciliation.sh staging auth-url
+   source/scripts/payment-reconciliation.sh staging invite
    ```
+
+   Send only `authorizationInviteUrl`. The owner opens that page in their own
+   Google session and clicks **Continue with Google**; they never need access to
+   the KinFusion Google account. Generating a new invitation invalidates the
+   previous one. Clicking Continue consumes the visible invitation; the OAuth
+   callback uses and consumes a separate short-lived nonce.
 
 7. After consent, verify `expectedAddress` equals `authorizedAddress` in:
 
@@ -91,6 +102,9 @@ version 43 in `appsscript.json`.
 ```bash
 # Read-only candidate scan
 source/scripts/payment-reconciliation.sh production scan 25
+
+# Short-lived owner authorization page
+source/scripts/payment-reconciliation.sh production invite
 
 # One explicit, organizer-approved payload; file must be chmod 600
 source/scripts/payment-reconciliation.sh production approve /path/to/approval.json

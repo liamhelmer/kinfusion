@@ -2,7 +2,7 @@
  * Unconference proposal handler.
  * Lock is already held by gateway.js when this function is called.
  */
-function handleUnconference(payload) {
+function handleUnconference_(payload) {
   var props = PropertiesService.getScriptProperties();
   var sheetId = props.getProperty('SHEET_ID');
   var fromEmail = props.getProperty('FROM_EMAIL');
@@ -11,7 +11,7 @@ function handleUnconference(payload) {
     return { ok: false, code: 'MISCONFIGURED' };
   }
 
-  var refCode = generateRefCode();
+  var refCode = generateRefCode_();
   var timestamp = new Date().toISOString();
 
   var ss = SpreadsheetApp.openById(sheetId);
@@ -52,7 +52,7 @@ function handleUnconference(payload) {
     MailApp.sendEmail(payload.email, subject, plainBody, {
       from: fromEmail,
       replyTo: 'hello@kinfusion.dance',
-      htmlBody: buildUnconferenceEmailHtml(payload.proposerName, payload.workshopTitle, refCode),
+      htmlBody: buildUnconferenceEmailHtml_(payload.proposerName, payload.workshopTitle, refCode),
       name: 'Kin-Fusion Campout',
     });
   } catch (mailErr) {

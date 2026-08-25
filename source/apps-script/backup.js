@@ -4,7 +4,7 @@
  * Trigger: weekly, Sundays — install via installBackupTrigger() once.
  */
 
-function runWeeklyBackup() {
+function runWeeklyBackup_() {
   var props = PropertiesService.getScriptProperties();
   var sheetId = props.getProperty('SHEET_ID');
   var folderId = props.getProperty('BACKUP_DRIVE_FOLDER_ID');
@@ -58,17 +58,20 @@ function runWeeklyBackup() {
  * Note: trigger runs in the project timezone (set to UTC in File -> Project settings).
  */
 function installBackupTrigger() {
+  assertController_();
   var triggers = ScriptApp.getProjectTriggers();
+  var installed = false;
   for (var i = 0; i < triggers.length; i++) {
-    if (triggers[i].getHandlerFunction() === 'runWeeklyBackup') {
-      Logger.log('installBackupTrigger: trigger already installed');
-      return;
-    }
+    var handler = triggers[i].getHandlerFunction();
+    if (handler === 'runWeeklyBackup_') installed = true;
+    if (handler === 'runWeeklyBackup') ScriptApp.deleteTrigger(triggers[i]);
   }
-  ScriptApp.newTrigger('runWeeklyBackup')
-    .timeBased()
-    .onWeekDay(ScriptApp.WeekDay.SUNDAY)
-    .atHour(0)
-    .create();
-  Logger.log('installBackupTrigger: weekly Sunday hour-0 trigger installed (runs in project timezone)');
+  if (!installed) {
+    ScriptApp.newTrigger('runWeeklyBackup_')
+      .timeBased()
+      .onWeekDay(ScriptApp.WeekDay.SUNDAY)
+      .atHour(0)
+      .create();
+  }
+  Logger.log('installBackupTrigger: private weekly trigger installed (runs in project timezone)');
 }
