@@ -57,20 +57,31 @@ const paymentHeaders = [
 const auditHeaders = ['Gmail Message ID', 'Gmail Received At', 'Reconciled At', 'Reconciliation Status'];
 const registrationHeaders = ['RefCode', 'FullName', 'Email', 'Pronouns', 'Accommodation', 'Donation', 'PaymentStatus'];
 
-function makeFixture() {
-  const payments = new FakeSheet('Pmts Received', [
+function makeFixture({ paymentSheetMissing = false } = {}) {
+  const payments = paymentSheetMissing ? null : new FakeSheet('Pmts Received', [
     paymentHeaders,
     ['old', 'KF-AB123', 'Alex Bee', 'alex@example.com', 'they', 25, 'Tent', '', 0, '', 25, 75],
   ]);
-  payments.setFormula(2, 11, '=SUMIF(R2C2:RC[-9],RC2,R2C6:RC[-5])');
-  payments.setFormula(2, 12, '=100-RC[-1]');
+  if (payments) {
+    payments.setFormula(2, 11, '=SUMIF(R2C2:RC[-9],RC2,R2C6:RC[-5])');
+    payments.setFormula(2, 12, '=100-RC[-1]');
+  }
   const registrations = new FakeSheet('Registrations', [
     registrationHeaders,
     ['KF-AB123', 'Alex Bee', 'alex@example.com', 'they', 'Tent', 0, 'unpaid'],
     ['KF-CD456', 'Casey Dee', 'casey@example.com', 'she', 'Cabin', 10, 'manual-review'],
   ]);
+  const sheets = { Registrations: registrations };
+  if (payments) sheets['Pmts Received'] = payments;
   const spreadsheet = {
-    getSheetByName: (name) => ({ 'Pmts Received': payments, Registrations: registrations })[name] || null,
+    insertions: [],
+    getSheetByName: (name) => sheets[name] || null,
+    insertSheet(name) {
+      const sheet = new FakeSheet(name, []);
+      sheets[name] = sheet;
+      this.insertions.push(name);
+      return sheet;
+    },
   };
   const lock = { waitLock: vi.fn(), releaseLock: vi.fn() };
   globalThis.PropertiesService = { getScriptProperties: () => ({ getProperty: () => 'sheet-id' }) };
@@ -81,7 +92,7 @@ function makeFixture() {
   globalThis.paymentHeaderIndex_ = globalThis.__kinfusionPaymentHelpers.paymentHeaderIndex_;
   globalThis.paymentCandidateBoundary_ = vi.fn(() => ({ ok: true, retry: false }));
   globalThis.paymentApplyLabel_ = vi.fn(() => ({ ok: true, labelId: 'Label_1' }));
-  return { payments, registrations, lock };
+  return { payments, registrations, lock, spreadsheet, sheets };
 }
 
 const approval = () => ({
@@ -93,6 +104,26 @@ const approval = () => ({
 beforeEach(() => vi.useFakeTimers().setSystemTime(new Date('2026-08-21T01:02:03.000Z')));
 
 describe('payment reconciliation sheet setup', () => {
+  test('creates the canonical payment sheet once when it is missing', () => {
+    const { spreadsheet, sheets } = makeFixture({ paymentSheetMissing: true });
+
+    expect(globalThis.setupPaymentReconciliationSheet()).toEqual({
+      ok: true,
+      addedHeaders: auditHeaders,
+      auditColumnStart: 13,
+    });
+    expect(sheets['Pmts Received'].data[0]).toEqual([...paymentHeaders, ...auditHeaders]);
+    expect(sheets['Pmts Received'].hidden).toEqual([[13, 4]]);
+    expect(spreadsheet.insertions).toEqual(['Pmts Received']);
+
+    expect(globalThis.setupPaymentReconciliationSheet()).toEqual({
+      ok: true,
+      addedHeaders: [],
+      auditColumnStart: 13,
+    });
+    expect(spreadsheet.insertions).toEqual(['Pmts Received']);
+  });
+
   test('adds and hides only the four audit headers', () => {
     const { payments } = makeFixture();
     expect(globalThis.setupPaymentReconciliationSheet()).toEqual({

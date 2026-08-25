@@ -55,7 +55,10 @@ function setupPaymentReconciliationSheet() {
   try {
     var ss = paymentOpenSpreadsheet_();
     var sheet = ss.getSheetByName(PAYMENT_SHEET_NAME);
-    if (!sheet) return { ok: false, error: 'payment_sheet_missing' };
+    if (!sheet) {
+      sheet = ss.insertSheet(PAYMENT_SHEET_NAME);
+      sheet.getRange(1, 1, 1, PAYMENT_VISIBLE_HEADERS.length).setValues([PAYMENT_VISIBLE_HEADERS]);
+    }
     var setup = paymentEnsureAuditColumns_(sheet);
     return { ok: true, addedHeaders: setup.addedHeaders, auditColumnStart: setup.auditColumnStart };
   } catch (error) {
