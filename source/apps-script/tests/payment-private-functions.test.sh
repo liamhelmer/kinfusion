@@ -12,7 +12,7 @@ FILES=(
 while IFS= read -r declaration; do
   name="${declaration#function }"
   case "$name" in
-    getPaymentGmailAuthStatus|getPaymentGmailAuthorizationUrl|resetPaymentGmailAuthorization|paymentGmailAuthCallback|scanPaymentGmailCandidates|setupPaymentReconciliationSheet|approvePaymentReconciliation)
+    getPaymentGmailAuthStatus|createPaymentGmailAuthorizationInvite|startPaymentGmailAuthorization|resetPaymentGmailAuthorization|doGet|scanPaymentGmailCandidates|setupPaymentReconciliationSheet|approvePaymentReconciliation)
       ;;
     *_)
       ;;
