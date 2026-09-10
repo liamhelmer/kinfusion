@@ -7,7 +7,7 @@
     "build": "eleventy",
     "start": "eleventy --serve",
     "test": "vitest run && npm run test:site",
-    "test:site": "eleventy && node --test scripts/tests/privacy-page.test.mjs",
+    "test:site": "eleventy && node --test scripts/tests/*.test.mjs",
     "test:watch": "vitest"
   },
   "keywords": [],
